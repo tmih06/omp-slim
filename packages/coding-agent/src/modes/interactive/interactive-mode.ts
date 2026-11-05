@@ -119,6 +119,7 @@ import type { FullscreenExitOutput, TuiMode } from "../../core/settings-manager.
 import { BUILTIN_SLASH_COMMANDS } from "../../core/slash-commands.ts";
 import { getSourcePackageKey, type SourceInfo } from "../../core/source-info.ts";
 import { isInstallTelemetryEnabled } from "../../core/telemetry.ts";
+import { formatThroughput } from "../../core/throughput.ts";
 import { withBuiltInRenderers } from "../../core/tools/renderers/index.ts";
 import type { TruncationResult } from "../../core/tools/truncate.ts";
 import { hasTrustRequiringProjectResources, ProjectTrustStore } from "../../core/trust-manager.ts";
@@ -519,6 +520,8 @@ export class InteractiveMode {
 	private streamingComponent: AssistantMessageComponent | undefined = undefined;
 	private readonly entriesRenderedByBoundaryCompaction = new Set<string>();
 	private streamingMessage: AssistantMessage | undefined = undefined;
+	/** When the current run started, for the throughput summary. */
+	private agentStartMs: number | null = null;
 
 	// Tool execution tracking: toolCallId -> component
 	private pendingTools = new Map<string, ToolExecutionComponent>();
@@ -3499,6 +3502,7 @@ export class InteractiveMode {
 
 		switch (event.type) {
 			case "agent_start":
+				this.agentStartMs = Date.now();
 				this.pendingTools.clear();
 				// Restore main escape handler if retry handler is still active
 				// (retry success event fires later, but we need main handler now)
@@ -3748,6 +3752,7 @@ export class InteractiveMode {
 				}
 				this.pendingTools.clear();
 
+				this.showThroughput(event.messages, event.willRetry);
 				this.ui.requestRender();
 				break;
 
@@ -4317,6 +4322,23 @@ export class InteractiveMode {
 				0,
 			),
 		);
+	}
+
+	/**
+	 * Show the throughput summary for a finished run. A run that will retry is skipped: its
+	 * `agent_start` resets the timer for the retried run, which reports once.
+	 */
+	private showThroughput(messages: readonly AgentMessage[], willRetry: boolean): void {
+		if (this.agentStartMs === null) return;
+		const elapsedMs = Date.now() - this.agentStartMs;
+		this.agentStartMs = null;
+		if (willRetry) return;
+
+		const line = formatThroughput(messages, elapsedMs);
+		if (!line) return;
+
+		this.chatContainer.addChild(new Spacer(1));
+		this.chatContainer.addChild(new ThemedText(() => theme.fg("dim", line), 1, 0));
 	}
 
 	/**

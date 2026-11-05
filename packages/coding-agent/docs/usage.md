@@ -24,6 +24,8 @@ Pi shows each tool call and result while it works. Press `Ctrl+O` to expand or c
 
 The startup header lists the instructions and resources Pi loaded. The editor border indicates the current thinking level. The footer updates as the model uses context and reports usage.
 
+When a run finishes, Pi prints a throughput line with the generated tokens per second and the run's token totals, for example `TPS 12.9 tok/s. out 76, in 210, cache r/w 192,256/0, total 192,542, 5.9s`. The rate covers the whole run, so tool execution and provider waiting lower it.
+
 Pi does not ask before every tool call. Review commands and changed files, and use a sandbox for untrusted or unattended work. See [Security](security.md).
 
 ## Change direction

@@ -10,6 +10,7 @@ This fork currently contains Pi with these customizations:
 
 - `omp-slim` CLI identity.
 - Cache miss notices enabled by default.
+- A throughput line after each run in interactive mode, reporting tokens per second and the run's token totals.
 - A minified, Bun-compiled executable build.
 - Bun-managed dependencies and workspace scripts, with Oxfmt formatting and Oxlint linting.
 - Linux and macOS build targets; no native Windows, Android, Nix, or p2 distribution.

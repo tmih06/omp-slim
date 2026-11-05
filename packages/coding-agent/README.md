@@ -6,6 +6,7 @@ A custom coding-agent build on top of [Pi](https://github.com/earendil-works/pi)
 
 - `omp-slim` CLI identity.
 - Cache miss notices enabled by default.
+- A throughput line after each run in interactive mode.
 - A minified Bun executable build.
 
 OMP integration is planned; no OMP features have been ported yet. The current build still includes Pi's existing features.
