@@ -16,24 +16,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# p2 has its own check (own Oxc configuration, TypeScript 5.9; apps/ is outside the root Oxc and tsc configs).
-# apps/ exists only in pi-private.
-if [ -d apps/p2 ]; then
-  for file in $STAGED_FILES; do
-    case "$file" in
-      apps/p2/*|packages/*|package.json|bun.lock|tsconfig.json|tsconfig.base.json)
-        echo "Checking apps/p2..."
-        bun run --cwd apps/p2 check
-        if [ $? -ne 0 ]; then
-          echo "❌ apps/p2 checks failed."
-          exit 1
-        fi
-        break
-        ;;
-    esac
-  done
-fi
-
 RUN_BROWSER_SMOKE=0
 for file in $STAGED_FILES; do
   case "$file" in

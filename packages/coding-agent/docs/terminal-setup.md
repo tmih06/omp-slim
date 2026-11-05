@@ -9,7 +9,7 @@ Pi uses extended-key protocols so terminals can distinguish combinations such as
 | Symptom | Start here |
 |---|---|
 | `Shift+Enter` submits instead of inserting a line | Your terminal's section below; for tmux, see [Run Pi in tmux](tmux.md) |
-| `Alt+Enter` does not queue a follow-up | [WezTerm](#wezterm), [Alacritty](#alacritty), or [Windows Terminal](#windows-terminal) |
+| `Alt+Enter` does not queue a follow-up | [WezTerm](#wezterm) or [Alacritty](#alacritty) |
 | Fullscreen scrolling is unusually slow | [iTerm2](#iterm2) |
 | Links work but show no hover preview | [Ghostty](#ghostty) |
 | Inline images or colors are not detected | [Override detected capabilities](#override-detected-capabilities) |
@@ -147,7 +147,6 @@ The user `keybindings.json` file is normally located at:
 
 - macOS: `~/Library/Application Support/Code/User/keybindings.json`
 - Linux: `~/.config/Code/User/keybindings.json`
-- Windows: `%APPDATA%\\Code\\User\\keybindings.json`
 
 ## Zed integrated terminal
 
@@ -164,36 +163,11 @@ Add these bindings to Zed's `keymap.json`:
 }
 ```
 
-## Windows Terminal
-
-Windows Terminal uses Pi's Windows and WSL shortcut defaults. See [Keybindings](keybindings.md) for the complete list.
-
-### Forward Shift+Enter
-
-When Pi runs natively on Windows, it checks the local Shift key state and treats plain Return or `ESC` + Return as `Shift+Enter` while Shift is held. This fallback does not work in WSL or over SSH. If `Shift+Enter` still submits, forward it explicitly.
-
-Open Windows Terminal's `settings.json` with `Ctrl+Shift+,` or **Settings > Open JSON file**. Add this object to its `actions` array:
-
-```json
-{
-  "command": { "action": "sendInput", "input": "\u001b[13;2u" },
-  "keys": "shift+enter"
-}
-```
-
-Fully close and reopen Windows Terminal, then verify that `Shift+Enter` inserts a new line in Pi.
-
-### Use Alt+Enter for follow-ups
-
-Windows Terminal binds `Alt+Enter` to fullscreen by default. Pi therefore uses `Ctrl+Q` for follow-ups on Windows and WSL.
-
-To use `Alt+Enter` instead, configure Windows Terminal to forward the key and bind `app.message.followUp` to `alt+enter` in Pi's `keybindings.json`. See [Keybindings](keybindings.md#assign-keybindings).
-
 ## xfce4-terminal and Terminator
 
 These terminals cannot reliably distinguish modified Enter keys from plain `Enter`. Custom bindings such as `Ctrl+Enter` or `Shift+Enter` therefore may not work.
 
-Use a terminal with modern extended-key support when you need those shortcuts, such as Kitty, Ghostty, WezTerm, iTerm2, Windows Terminal, or a compatible Alacritty build.
+Use a terminal with modern extended-key support when you need those shortcuts, such as Kitty, Ghostty, WezTerm, iTerm2, or a compatible Alacritty build.
 
 ## IntelliJ IDEA integrated terminal
 

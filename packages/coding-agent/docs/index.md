@@ -1,4 +1,6 @@
-# Pi
+# omp-slim
+
+This is the retained Pi reference for omp-slim. Start with the fork's [Quickstart](quickstart.md); examples on other reference pages may still use the upstream `pi` command. The supported build targets are Linux and macOS.
 
 Pi is an extensible AI agent that works from your terminal. Give it a goal and a working folder, and it can inspect files, run commands, edit content, and work through multi-step tasks.
 
@@ -32,7 +34,7 @@ Use the [Quickstart customization chooser](quickstart.md#choose-how-to-customize
 
 Use the reference pages to look up [CLI options](cli.md), [settings](settings.md), [providers](providers.md), [keybindings](keybindings.md), and [environment variables](environment-variables.md).
 
-For platform-specific help, see [Terminal Setup](terminal-setup.md), [Windows](windows.md), [tmux](tmux.md), [Termux on Android](termux.md), or [Containerization](containerization.md).
+For platform-specific help, see [Terminal Setup](terminal-setup.md), [tmux](tmux.md), or [Containerization](containerization.md).
 
 ## Work safely
 

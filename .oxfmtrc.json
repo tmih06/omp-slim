@@ -15,7 +15,6 @@
 		"packages/ai/src/providers/data/**",
 		"packages/coding-agent/schemas/**",
 		"**/package-lock.json",
-		"bun.lock",
-		"apps/**"
+		"bun.lock"
 	]
 }

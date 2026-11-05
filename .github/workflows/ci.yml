@@ -55,9 +55,6 @@ jobs:
       - name: Check
         run: bun run check
 
-      - name: Check p2
-        run: bun run --cwd apps/p2 check
-
   test:
     name: test (${{ matrix.name }})
     runs-on: ubuntu-latest

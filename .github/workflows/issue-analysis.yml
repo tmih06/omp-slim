@@ -3,7 +3,6 @@
 #
 # Comment triggers can include one `#run-on-*` tag anywhere in the text:
 #   @issuron analyze #run-on-linux    -> ubuntu-latest (default)
-#   @issuron analyze #run-on-windows  -> windows-latest
 #   @issuron analyze #run-on-mac      -> macos-latest
 #
 # Label triggers always run on the default Linux runner. Runner selection is
@@ -83,16 +82,12 @@ jobs:
             const RUN_ON_TAG_RE = /#run-on-([a-z0-9][a-z0-9_-]*)\b/gi;
             const RUNNER_PROFILES = {
               linux: { runsOn: 'ubuntu-latest', os: 'linux' },
-              windows: { runsOn: 'windows-latest', os: 'windows' },
               mac: { runsOn: 'macos-latest', os: 'macos' },
             };
             const RUN_ON_ALIASES = {
               linux: 'linux',
               ubuntu: 'linux',
               'ubuntu-latest': 'linux',
-              windows: 'windows',
-              win: 'windows',
-              'windows-latest': 'windows',
               mac: 'mac',
               macos: 'mac',
               darwin: 'mac',
@@ -301,26 +296,6 @@ jobs:
             brew install ripgrep
           fi
 
-      - name: Install system dependencies (Windows)
-        if: needs.authorize.outputs.runner_os == 'windows'
-        shell: pwsh
-        run: |
-          $packages = @()
-          if (-not (Get-Command fd -ErrorAction SilentlyContinue)) {
-            $packages += "fd"
-          }
-          if (-not (Get-Command rg -ErrorAction SilentlyContinue)) {
-            $packages += "ripgrep"
-          }
-          if ($packages.Count -gt 0) {
-            if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
-              throw "fd and ripgrep must be installed on Windows runners, or Chocolatey must be available to install them."
-            }
-            choco install $packages -y --no-progress
-          }
-          fd --version
-          rg --version
-
       - name: Install dependencies
         working-directory: ${{ steps.workdir.outputs.name }}
         run: npm ci --ignore-scripts
@@ -348,9 +323,7 @@ jobs:
             fs.mkdirSync(agentDir, { recursive: true });
             const authPath = path.join(agentDir, 'auth.json');
             fs.writeFileSync(authPath, authJson, { mode: 0o600 });
-            if (process.platform !== 'win32') {
-              fs.chmodSync(authPath, 0o600);
-            }
+            fs.chmodSync(authPath, 0o600);
 
       - name: Run pi /is
         id: run_pi

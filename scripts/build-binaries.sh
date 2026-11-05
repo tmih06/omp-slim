@@ -10,7 +10,7 @@
 #   --skip-install       Skip bun install
 #   --skip-build         Skip the package build
 #   --offline-model-data Build with bundled model data instead of refreshing it
-#   --platform <name>    Build only for specified platform (darwin-arm64, darwin-x64, linux-x64, linux-arm64, windows-x64, windows-arm64)
+#   --platform <name>    Build only for specified platform (darwin-arm64, darwin-x64, linux-x64, linux-arm64)
 #   --out <dir>          Output directory (default: packages/coding-agent/binaries)
 #
 # Output:
@@ -19,8 +19,6 @@
 #     pi-darwin-x64.tar.gz
 #     pi-linux-x64.tar.gz
 #     pi-linux-arm64.tar.gz
-#     pi-windows-x64.zip
-#     pi-windows-arm64.zip
 
 set -euo pipefail
 
@@ -64,11 +62,11 @@ done
 # Validate platform if specified
 if [[ -n "$PLATFORM" ]]; then
     case "$PLATFORM" in
-        darwin-arm64|darwin-x64|linux-x64|linux-arm64|windows-x64|windows-arm64)
+        darwin-arm64|darwin-x64|linux-x64|linux-arm64)
             ;;
         *)
             echo "Invalid platform: $PLATFORM"
-            echo "Valid platforms: darwin-arm64, darwin-x64, linux-x64, linux-arm64, windows-x64, windows-arm64"
+            echo "Valid platforms: darwin-arm64, darwin-x64, linux-x64, linux-arm64"
             exit 1
             ;;
     esac
@@ -94,7 +92,7 @@ if [[ "$SKIP_BUILD" == "false" ]]; then
         bun run build:offline
     else
         echo "==> Building all packages..."
-        npm run build
+        bun run build
     fi
 else
     echo "==> Skipping package build (--skip-build)"
@@ -105,13 +103,13 @@ cd packages/coding-agent
 
 # Clean previous builds
 rm -rf "$OUTPUT_DIR"
-mkdir -p "$OUTPUT_DIR"/{darwin-arm64,darwin-x64,linux-x64,linux-arm64,windows-x64,windows-arm64}
+mkdir -p "$OUTPUT_DIR"/{darwin-arm64,darwin-x64,linux-x64,linux-arm64}
 
 # Determine which platforms to build
 if [[ -n "$PLATFORM" ]]; then
     PLATFORMS=("$PLATFORM")
 else
-    PLATFORMS=(darwin-arm64 darwin-x64 linux-x64 linux-arm64 windows-x64 windows-arm64)
+    PLATFORMS=(darwin-arm64 darwin-x64 linux-x64 linux-arm64)
 fi
 
 for platform in "${PLATFORMS[@]}"; do
@@ -129,11 +127,7 @@ for platform in "${PLATFORMS[@]}"; do
     # Disable cwd bunfig.toml autoload so project preload scripts cannot crash the
     # standalone binary before pi starts (see #7684). Disable cwd .env autoload so
     # project env files do not leak into pi's environment (see #10473).
-    if [[ "$platform" == windows-* ]]; then
-        bun build --compile --no-compile-autoload-bunfig --no-compile-autoload-dotenv --target="$bun_target" ./dist/bun/cli.js ./src/utils/image-resize-worker.ts ./src/extensions/codemode/worker.ts --outfile "$OUTPUT_DIR/$platform/pi.exe"
-    else
-        bun build --compile --no-compile-autoload-bunfig --no-compile-autoload-dotenv --target="$bun_target" ./dist/bun/cli.js ./src/utils/image-resize-worker.ts ./src/extensions/codemode/worker.ts --outfile "$OUTPUT_DIR/$platform/pi"
-    fi
+    bun build --compile --minify --production --no-compile-autoload-bunfig --no-compile-autoload-dotenv --target="$bun_target" ./dist/bun/cli.js ./src/utils/image-resize-worker.ts ./src/extensions/codemode/worker.ts --outfile "$OUTPUT_DIR/$platform/omp-slim"
 done
 
 echo "==> Creating release archives..."
@@ -153,48 +147,23 @@ for platform in "${PLATFORMS[@]}"; do
     cp -r examples "$OUTPUT_DIR/$platform/"
 
     # Copy the selected architecture's native platform helpers next to the executable.
-    native_platform="${platform/windows-/win32-}"
+    native_platform="$platform"
     native_path="native/${native_platform%-*}/prebuilds"
     mkdir -p "$OUTPUT_DIR/$platform/$native_path"
     cp -R "../tui/$native_path/$native_platform" "$OUTPUT_DIR/$platform/$native_path/"
 done
 
-# Create archives
+# Create archives with a wrapper directory for mise compatibility.
 cd "$OUTPUT_DIR"
-
 for platform in "${PLATFORMS[@]}"; do
-    if [[ "$platform" == windows-* ]]; then
-        # Windows (zip)
-        echo "Creating pi-$platform.zip..."
-        (cd "$platform" && zip -r ../pi-$platform.zip .)
-    else
-        # Unix platforms (tar.gz) - use wrapper directory for mise compatibility
-        echo "Creating pi-$platform.tar.gz..."
-        mv "$platform" pi && tar -czf pi-$platform.tar.gz pi && mv pi "$platform"
-    fi
+    echo "Creating pi-$platform.tar.gz..."
+    mv "$platform" pi && tar -czf "pi-$platform.tar.gz" pi && mv pi "$platform"
 done
 
-# Extract archives for easy local testing
-echo "==> Extracting archives for testing..."
-for platform in "${PLATFORMS[@]}"; do
-    rm -rf "$platform"
-    if [[ "$platform" == windows-* ]]; then
-        mkdir -p "$platform" && (cd "$platform" && unzip -q ../pi-$platform.zip)
-    else
-        tar -xzf pi-$platform.tar.gz && mv pi "$platform"
-    fi
-done
-
-echo ""
 echo "==> Build complete!"
 echo "Archives available in $OUTPUT_DIR/"
-ls -lh *.tar.gz *.zip 2>/dev/null || true
-echo ""
+ls -lh *.tar.gz
 echo "Extracted directories for testing:"
 for platform in "${PLATFORMS[@]}"; do
-    if [[ "$platform" == windows-* ]]; then
-        echo "  $OUTPUT_DIR/$platform/pi.exe"
-    else
-        echo "  $OUTPUT_DIR/$platform/pi"
-    fi
+    echo "  $OUTPUT_DIR/$platform/omp-slim"
 done

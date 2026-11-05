@@ -12,6 +12,7 @@ This fork currently contains Pi with these customizations:
 - Cache miss notices enabled by default.
 - A minified, Bun-compiled executable build.
 - Bun-managed dependencies and workspace scripts, with Oxfmt formatting and Oxlint linting.
+- Linux and macOS build targets; no native Windows, Android, Nix, or p2 distribution.
 
 OMP is not yet a dependency, and no OMP features have been ported yet. Feature selection and integration are the next steps. The current build still includes Pi's existing features; it is not yet a feature-trimmed distribution.
 
@@ -73,14 +74,13 @@ bun run build:offline  # Build using previously generated model data
 bun run format         # Apply Oxfmt formatting
 bun run lint           # Run Oxlint
 bun run check          # Check formatting, lint, dependency policy, and types
-bun run --cwd apps/p2 check  # Check the separate p2 app
 ```
 
 `bun.lock` is the development dependency lockfile. `bunfig.toml` pins new direct dependencies exactly, disables install lifecycle scripts, and sets a two-day minimum release age for dependency resolution. CI uses frozen installs. The inherited npm installer lock under `packages/coding-agent/install-lock/` is a generated distribution artifact, now derived from `bun.lock`; it is not a second development lockfile.
 
-Oxfmt and Oxlint check the existing package source/test scope. p2 retains its separate check. Import sorting stays disabled to avoid unnecessary import reordering. Deliberate test assertions, terminal control-character patterns, and React effect dependencies retain documented lint exceptions. New React Compiler-specific policies are not imposed as part of this tooling migration.
+Oxfmt and Oxlint check the package source/test scope. Import sorting stays disabled to avoid unnecessary import reordering. Deliberate test assertions and terminal control-character patterns retain documented lint exceptions.
 
-Node remains required for Node-specific tests and two TypeScript 7 compiler-API checks that cannot run under Bun 1.4.2. Bun remains the package manager, build-script runner, and executable compiler. Inherited upstream npm publishing and Nix automation has not been migrated to the fork's build workflow.
+Node remains required for Node-specific tests and two TypeScript 7 compiler-API checks that cannot run under Bun 1.4.2. Bun remains the package manager, build-script runner, and executable compiler. Inherited upstream npm publishing has not been migrated to the fork's build workflow.
 
 Internal library package names retain their upstream `@earendil-works/*` identities. The user-facing application is `omp-slim`.
 

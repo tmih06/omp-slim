@@ -95,8 +95,6 @@ jobs:
             pi-darwin-x64.tar.gz
             pi-linux-x64.tar.gz
             pi-linux-arm64.tar.gz
-            pi-windows-x64.zip
-            pi-windows-arm64.zip
           )
 
           for asset in "${binary_assets[@]}"; do
@@ -113,8 +111,6 @@ jobs:
             pi-darwin-x64.tar.gz
             pi-linux-x64.tar.gz
             pi-linux-arm64.tar.gz
-            pi-windows-x64.zip
-            pi-windows-arm64.zip
             pi-coding-agent-install-package.json
             pi-coding-agent-install-package-lock.json
           )
@@ -137,7 +133,6 @@ jobs:
         runner:
           - ubuntu-latest
           - macos-latest
-          - windows-latest
     permissions:
       actions: read
     env:
@@ -168,19 +163,7 @@ jobs:
               platform="${runtime_platform}"
               archive="release-assets/pi-${platform}.tar.gz"
               root="extracted/pi"
-              binary="${root}/pi"
-              ;;
-            win32-arm64)
-              platform="windows-arm64"
-              archive="release-assets/pi-${platform}.zip"
-              root="extracted"
-              binary="${root}/pi.exe"
-              ;;
-            win32-x64)
-              platform="windows-x64"
-              archive="release-assets/pi-${platform}.zip"
-              root="extracted"
-              binary="${root}/pi.exe"
+              binary="${root}/omp-slim"
               ;;
             *)
               echo "::error::Unsupported runner platform ${runtime_platform}"
@@ -189,14 +172,7 @@ jobs:
           esac
 
           mkdir -p extracted
-          if [[ "${archive}" == *.zip ]]; then
-            export ARCHIVE_PATH="$(cygpath -w "${archive}")"
-            export DESTINATION_PATH="$(cygpath -w extracted)"
-            powershell.exe -NoProfile -NonInteractive -Command \
-              'Expand-Archive -LiteralPath $env:ARCHIVE_PATH -DestinationPath $env:DESTINATION_PATH -Force'
-          else
-            tar -xf "${archive}" -C extracted
-          fi
+          tar -xf "${archive}" -C extracted
           echo "root=${root}" >> "${GITHUB_OUTPUT}"
           echo "binary=${binary}" >> "${GITHUB_OUTPUT}"
 
@@ -239,8 +215,6 @@ jobs:
             pi-darwin-x64.tar.gz
             pi-linux-x64.tar.gz
             pi-linux-arm64.tar.gz
-            pi-windows-x64.zip
-            pi-windows-arm64.zip
             pi-coding-agent-install-package.json
             pi-coding-agent-install-package-lock.json
             SHA256SUMS
@@ -269,8 +243,6 @@ jobs:
             pi-darwin-x64.tar.gz
             pi-linux-x64.tar.gz
             pi-linux-arm64.tar.gz
-            pi-windows-x64.zip
-            pi-windows-arm64.zip
             pi-coding-agent-install-package.json
             pi-coding-agent-install-package-lock.json
             SHA256SUMS
@@ -351,11 +323,8 @@ jobs:
       - name: Check pi-env daemons
         run: |
           set -euo pipefail
-          for name in linux-x64 linux-arm64 android-arm64 android-x64 darwin-arm64 darwin-x64; do
+          for name in linux-x64 linux-arm64 darwin-arm64 darwin-x64; do
             test -s "packages/env/bin/pi-env-${name}/pi-env"
-          done
-          for name in windows-x64 windows-arm64; do
-            test -s "packages/env/bin/pi-env-${name}/pi-env.exe"
           done
           chmod +x packages/env/bin/*/pi-env*
           ls -lR packages/env/bin

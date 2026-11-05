@@ -55,8 +55,8 @@ test("pins published and private dependencies without touching registry aliases,
 				"@mariozechner/pi-ai": "npm:@earendil-works/pi-ai@1.0.0",
 			},
 		});
-		await writeManifest(root, "apps/p2", {
-			name: "p2",
+		await writeManifest(root, "apps/demo", {
+			name: "demo",
 			version: "0.0.1",
 			private: true,
 			dependencies: {
@@ -82,7 +82,7 @@ test("pins published and private dependencies without touching registry aliases,
 		const evalsManifest = await readManifest(root, "packages/evals");
 		assert.equal(evalsManifest.dependencies["@earendil-works/pi-coding-agent"], "2.0.0");
 		assert.equal(evalsManifest.dependencies["@mariozechner/pi-ai"], "npm:@earendil-works/pi-ai@1.0.0");
-		const appManifest = await readManifest(root, "apps/p2");
+		const appManifest = await readManifest(root, "apps/demo");
 		assert.equal(appManifest.dependencies["@earendil-works/pi-ai"], "2.0.0");
 		assert.equal(appManifest.version, "0.0.1");
 		const generatedManifest = await readManifest(root, "packages/coding-agent/install-lock");

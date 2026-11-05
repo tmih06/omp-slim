@@ -53,7 +53,7 @@ function loadNativePlatformHelper(platform: string, suffix = ""): NativePlatform
 }
 
 export function getNativePlatformHelper(): NativePlatformHelper | undefined {
-	if (process.platform !== "darwin" && process.platform !== "win32") return undefined;
+	if (process.platform !== "darwin") return undefined;
 	return loadNativePlatformHelper(process.platform);
 }
 

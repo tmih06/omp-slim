@@ -22,7 +22,6 @@
 		"**/models.generated.ts",
 		"**/*.models.ts",
 		"**/test-sessions.ts",
-		"packages/ai/src/providers/data/**",
-		"apps/**"
+		"packages/ai/src/providers/data/**"
 	]
 }

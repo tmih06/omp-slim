@@ -1,140 +1,80 @@
-# Quickstart
+# omp-slim quickstart
 
-Pi runs in your terminal and works with files on your machine. To use it, you need access to a model through a supported provider. This can be a subscription, an API key, or a local model.
+omp-slim runs in a Linux or macOS terminal and works with files in your current directory. You need a supported model provider, subscription, API key, or local model.
 
-For native Windows setup, read [Windows Setup](windows.md). For Android, read [Termux Setup](termux.md).
+## 1. Build
 
-## 1. Install Pi
+Install Bun 1.4.2 and Node.js 22.19 or newer, then run from the repository root:
 
-Install Pi with the installer on macOS, Linux, or Windows:
-
-```bash tab="macOS / Linux"
-curl -fsSL https://pi.dev/install.sh | sh
+```sh
+bun install --frozen-lockfile --ignore-scripts
+bun run build
+bun run --cwd packages/coding-agent build:binary
 ```
 
-```powershell tab="Windows"
-powershell -c "irm https://pi.dev/install.ps1 | iex"
+The executable is `packages/coding-agent/dist/omp-slim`. Keep the adjacent assets with it when moving the distribution. See the [repository README](../../../README.md) for build details.
+
+Upstream Pi installers and npm packages install Pi, not this fork.
+
+## 2. Start
+
+Change to the project you want to work on, then start the executable:
+
+```sh
+cd /path/to/project
+/path/to/omp-slim/packages/coding-agent/dist/omp-slim
 ```
 
-Both installers pin all dependencies and update Pi with `pi update`. Alternatively, install Pi from npm, which does not pin transitive dependencies. This requires Node.js 22.19 or newer:
+The working directory determines project instructions, configuration, and session grouping. Run `--help` for CLI options.
 
-```bash
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-```
-
-Pi does not require dependency lifecycle scripts for a normal npm installation.
-
-With Nix on macOS or Linux, install the latest release from Pi's flake. Nix builds Pi from source:
-
-```bash
-nix profile add github:earendil-works/pi/stable
-```
-
-Older Nix versions use `nix profile install` instead. Update with `nix profile upgrade pi`; `pi update` cannot update a Nix installation. To pin a release, use a tag such as `github:earendil-works/pi/v1.0.0`.
-
-Verify the installation:
-
-```bash
-pi --version
-```
-
-## 2. Start Pi
-
-Change to the folder you want Pi to work with, then start it:
-
-```bash
-cd /path/to/folder
-pi
-```
-
-The working folder helps Pi discover relevant files, instructions, and configuration. Pi also uses it to group saved sessions.
-
-<p align="center"><img src="images/interactive-mode.png" alt="Pi running in a terminal with a conversation, input editor, and status footer" width="750"></p>
-
-The interface shows your conversation, an editor for prompts and commands, and a footer with the current folder, model, and session status. See [Use Pi in the terminal](usage.md) to learn how to add files, run commands, direct ongoing work, and manage results.
+The remaining reference pages may use the upstream `pi` command; substitute `omp-slim` when running this fork.
 
 ## 3. Choose a model
 
-A **model** generates Pi's responses. A **provider** is the service or account Pi uses to access that model.
-
-In Pi, run:
+Run:
 
 ```text
 /login
 ```
 
-Choose a provider, then follow the prompts to use a subscription or store an API key. Run `/model` afterward if you want to select a different available model.
+Choose a provider and follow its prompts. Run `/model` to select a model. See [Models](models.md) for environment-variable authentication, local models, and custom endpoints.
 
-See [Choose a model and provider](models.md) for supported providers, environment-variable authentication, local models, and custom endpoints.
+## 4. Give it a task
 
-## 4. Give Pi a task
-
-Pi shows each file read, search, command, and edit it performs. It does not ask before every tool call.
-
-Enter a task that matches your work, for example:
-
-```text
-Summarize @meeting-notes.md and save the action items to action-items.md.
-```
+For example:
 
 ```text
 Explain how this repository is structured and how to run its checks.
 ```
 
-```text
-Compare @previous.csv with @current.csv and summarize the important changes.
-```
-
-Type `@` in the editor to search for a file instead of entering its full path. When Pi finishes, review its response and any changed files. Use version control or backups for important work. For untrusted or unattended work, use a container or another sandbox. See [Security](security.md).
+Type `@` to attach a file. Review tool calls and changed files. Tools execute with your account's permissions; use version control and isolate untrusted work. See [Security](security.md).
 
 ## Continue later
 
-Pi saves sessions automatically. Exit Pi, then resume the most recent session for the same working folder with:
+Sessions are saved automatically. Resume the latest session for the current project with:
 
-```bash
-pi --continue
+```sh
+omp-slim --continue
 ```
 
-Use `/resume` to choose another saved session. See [Continue or branch a session](sessions.md) for session naming, branching, compaction, export, and sharing.
+Use the full executable path if it is not on `PATH`. Use `/resume` to choose a different session.
 
-## Next steps
+## Choose how to customize Pi
 
-- [Use Pi interactively](usage.md) to learn input, commands, shortcuts, and queued messages.
-- [Add instructions](configuration.md#context-files) that Pi should follow whenever it works in a folder.
-- [Choose a model and provider](models.md).
+The inherited customization mechanisms remain available:
 
-### Choose how to customize Pi
-
-Start with the least powerful mechanism that meets your need:
-
-| Need | Start with |
+| Need | Reference |
 |---|---|
-| Give Pi persistent instructions for a folder | [`AGENTS.md`](configuration.md#context-files) |
-| Reuse a prompt from the `/` menu | [Prompt template](prompt-templates.md) |
-| Add task-specific instructions and supporting files | [Skill](skills.md) |
-| Add executable tools, commands, or event handlers | [Extension](extensions.md) |
-| Build a custom terminal component | [Terminal UI](tui.md) |
-| Connect an unsupported model service | [Custom provider](custom-provider.md) |
-| Install or distribute several resources | [Pi package](packages.md) |
+| Persistent project instructions | [`AGENTS.md`](configuration.md#context-files) |
+| Reusable prompts | [Prompt templates](prompt-templates.md) |
+| Task-specific instructions | [Skills](skills.md) |
+| Executable tools, commands, and hooks | [Extensions](extensions.md) |
+| Terminal components | [Terminal UI](tui.md) |
+| Additional model services | [Custom providers](custom-provider.md) |
+| Bundled customization resources | [Packages](packages.md) |
 
-## Uninstall Pi
+## Update or remove
 
-If you installed Pi with npm, run:
+Update the source checkout and rebuild to update omp-slim. Upstream `pi update` and Pi's installers are not the fork's distribution mechanism.
 
-```bash
-npm uninstall -g @earendil-works/pi-coding-agent
-```
-
-If you used the installer, run it again and choose **Uninstall Pi**:
-
-```bash
-curl -fsSL https://pi.dev/install.sh | sh
-```
-
-If you installed Pi with Nix, run:
-
-```bash
-nix profile remove pi
-```
-
-None of these methods removes configuration, credentials, sessions, or installed Pi packages from `~/.pi/agent/`.
+To remove a local distribution, delete its executable, adjacent assets, and any launcher you created. Configuration, credentials, and sessions remain in `~/.pi/agent/`; do not delete that directory unless you also intend to remove shared Pi data.
