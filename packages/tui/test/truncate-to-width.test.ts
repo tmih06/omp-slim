@@ -61,6 +61,14 @@ describe("truncateToWidth", () => {
 		const truncated = truncateToWidth("🙂\t界 \x1b_abc\x07", 7, "…", true);
 		assert.strictEqual(truncated, "🙂\t\x1b[0m…\x1b[0m ");
 	});
+
+	it("returns styled text unchanged when it already fits, padding on request", () => {
+		const text = "\x1b[38;2;120;180;255mfunction\x1b[0m \x1b[1mfoo\x1b[0m(bar: string)";
+
+		assert.strictEqual(truncateToWidth(text, 1000), text);
+		assert.strictEqual(truncateToWidth(text, visibleWidth(text)), text);
+		assert.strictEqual(truncateToWidth(text, visibleWidth(text) + 2, "...", true), `${text}  `);
+	});
 });
 
 describe("visibleWidth", () => {

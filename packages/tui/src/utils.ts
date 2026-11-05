@@ -1197,6 +1197,13 @@ export function truncateToWidth(
 		return pad ? " ".repeat(maxWidth) : "";
 	}
 
+	// Styled lines usually already fit. Measure them without the per-grapheme pass below, which
+	// dominates redraws: a styled line that fits cost ~50us, an unstyled one ~1us.
+	const fittingWidth = asciiVisibleWidth(text);
+	if (fittingWidth !== -1 && fittingWidth <= maxWidth) {
+		return pad ? text + " ".repeat(maxWidth - fittingWidth) : text;
+	}
+
 	const ellipsisWidth = visibleWidth(ellipsis);
 	if (ellipsisWidth >= maxWidth) {
 		const textWidth = visibleWidth(text);
