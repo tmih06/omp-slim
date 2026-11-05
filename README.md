@@ -18,7 +18,7 @@ OMP is not yet a dependency, and no OMP features have been ported yet. Feature s
 
 ## Build
 
-Requirements: Bun and Node.js 22.19 or newer. Bun manages the pinned workspace dependencies, runs the build, and compiles the executable.
+Requirements: Bun 1.4.4 and Node.js 22.19 or newer. Bun manages the pinned workspace dependencies, runs the build, and compiles the executable.
 
 From the repository root:
 

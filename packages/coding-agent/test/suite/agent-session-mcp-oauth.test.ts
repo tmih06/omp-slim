@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai";
 import type { ToolResultMessage } from "@earendil-works/pi-ai/compat";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { APP_NAME } from "../../src/config.ts";
 import { InMemoryAuthStorageBackend } from "../../src/core/auth-storage.ts";
 import { emitSessionShutdownEvent } from "../../src/core/extensions/runner.ts";
 import { runMcpCommand } from "../../src/extensions/mcp/cli.ts";
@@ -200,7 +201,7 @@ describe("AgentSession MCP OAuth", () => {
 
 		const fallback = await setup("follow");
 		await fallback.harness.session.prompt("/mcp login issues");
-		expect(fallback.server.registrations.map((metadata) => metadata.client_name)).toEqual(["pi"]);
+		expect(fallback.server.registrations.map((metadata) => metadata.client_name)).toEqual([APP_NAME]);
 		// OpenID Connect servers reject the loopback redirect URI of a `web` client (#10493).
 		expect(fallback.server.registrations.map((metadata) => metadata.application_type)).toEqual(["native"]);
 	});
@@ -217,7 +218,7 @@ describe("AgentSession MCP OAuth", () => {
 		expect(fixed.opened[0].searchParams.get("redirect_uri")).toBe(`http://127.0.0.1:${port}/oauth/done`);
 	});
 
-	it("gives up on pi mcp login after --timeout, also while the authorization server hangs", async () => {
+	it(`gives up on ${APP_NAME} mcp login after --timeout, also while the authorization server hangs`, async () => {
 		const server = await startOAuthMcpServer();
 		cleanups.push(server.close);
 		const agentDir = mkdtempSync(join(tmpdir(), "pi-mcp-login-"));
@@ -248,7 +249,7 @@ describe("AgentSession MCP OAuth", () => {
 		expect(stalled.output.at(-1)).toContain("was cancelled or not completed within");
 	});
 
-	it("uses credentials from pi mcp login on the next turn", async () => {
+	it(`uses credentials from ${APP_NAME} mcp login on the next turn`, async () => {
 		const { harness, server, backend } = await setup("follow");
 		const agentDir = mkdtempSync(join(tmpdir(), "pi-mcp-login-"));
 		cleanups.push(() => rmSync(agentDir, { recursive: true, force: true }));

@@ -273,7 +273,7 @@ async function main(): Promise<number> {
 		},
 	});
 	if (values.help) {
-		console.log(`Usage: node packages/coding-agent/test/mcp-conformance/run.ts [options]
+		console.log(`Usage: bun packages/coding-agent/test/mcp-conformance/run.ts [options]
 
 Options:
   --mode <version>     Only run this protocol version (repeatable): ${MODES.join(", ")}
@@ -304,10 +304,10 @@ Options:
 	try {
 		// The upstream runner splits --command on spaces, so use a launcher path without any.
 		const launcher = join(workDir, "pi-client");
-		writeFileSync(
-			launcher,
-			`#!/bin/sh\nexec ${JSON.stringify(process.execPath)} --import ${JSON.stringify(resolverUrl)} ${JSON.stringify(clientPath)} "$@"\n`,
-		);
+		// Bun applies tsconfig paths itself; only Node needs the source resolver preload.
+		const runtimeArgs = process.versions.bun ? [] : ["--import", resolverUrl];
+		const command = [process.execPath, ...runtimeArgs, clientPath].map((arg) => JSON.stringify(arg)).join(" ");
+		writeFileSync(launcher, `#!/bin/sh\nexec ${command} "$@"\n`);
 		chmodSync(launcher, 0o755);
 
 		const results: ScenarioResult[] = [];

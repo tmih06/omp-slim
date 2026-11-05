@@ -3,10 +3,10 @@
 Runs the official [MCP conformance suite](https://github.com/modelcontextprotocol/conformance) against pi's MCP client and compares the result with a committed baseline.
 
 ```bash
-npm run test:mcp-conformance
+bun run test:mcp-conformance
 ```
 
-CI runs it in the `mcp-conformance` job of `.github/workflows/ci.yml`. Requires network access the first time, to fetch the pinned suite (`@modelcontextprotocol/conformance@0.2.0-alpha.11`) with `npx`. Install scripts are disabled. Needs a POSIX shell.
+CI runs it in the `mcp-conformance` job of `.github/workflows/ci.yml`. Requires network access the first time, to fetch the pinned suite (`@modelcontextprotocol/conformance@0.2.0-alpha.11`) with `npx`. Install scripts are disabled. Needs a POSIX shell. CI pins Bun 1.4.4. Bun resolves workspace source aliases directly; Node runs preload the source resolver instead.
 
 ## How it works
 
@@ -27,8 +27,8 @@ Checks that started passing are reported; update the baseline to lock them in.
 ## Options
 
 ```bash
-node packages/coding-agent/test/mcp-conformance/run.ts --mode 2025-11-25 --scenario auth/scope-step-up --verbose
-node packages/coding-agent/test/mcp-conformance/run.ts --update-baseline
+bun packages/coding-agent/test/mcp-conformance/run.ts --mode 2025-11-25 --scenario auth/scope-step-up --verbose
+bun packages/coding-agent/test/mcp-conformance/run.ts --update-baseline
 ```
 
 - `--mode`, `--scenario`: run a subset (repeatable).

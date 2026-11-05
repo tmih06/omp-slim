@@ -10,6 +10,7 @@ import {
 	OAuthIssuerMismatchError,
 } from "@earendil-works/pi-mcp/oauth";
 import { afterEach, describe, expect, it } from "vitest";
+import { APP_NAME } from "../src/config.ts";
 import { InMemoryAuthStorageBackend } from "../src/core/auth-storage.ts";
 import {
 	createMcpAuthProvider,
@@ -236,9 +237,9 @@ describe("MCP OAuth client ID metadata documents", () => {
 	});
 
 	// #11426
-	it("uses pi's document by default when authorization responses name their issuer", async () => {
+	it("uses pi's document when explicitly requested and authorization responses name their issuer", async () => {
 		const { server, store, signIn } = await startServer({ cimd: true, issParameter: true });
-		await signIn({});
+		await signIn(cimd);
 		const [authorization] = server.authorizations;
 		expect(authorization.get("client_id")).toBe("https://pi.dev/oauth/client.json");
 		const redirect = new URL(authorization.get("redirect_uri") ?? "");
@@ -249,10 +250,18 @@ describe("MCP OAuth client ID metadata documents", () => {
 		expect(server.tokenRequests[0].get("redirect_uri")).toBe(redirect.href);
 		// The document is not stored, so signing in again refreshes the tokens instead of discarding them.
 		expect((await store.load())?.clientInformation).toBeUndefined();
-		await signIn({});
+		await signIn(cimd);
 		expect(server.authorizations).toHaveLength(1);
 		expect(server.tokenRequests[1].get("grant_type")).toBe("refresh_token");
 		expect(server.tokenRequests[1].get("client_id")).toBe("https://pi.dev/oauth/client.json");
+	});
+
+	it("registers with this distribution's name by default even when the server supports documents", async () => {
+		const { server, store, signIn } = await startServer({ cimd: true, issParameter: true });
+		await signIn({});
+		expect(server.registrations).toMatchObject([{ client_name: APP_NAME }]);
+		expect(server.authorizations[0].get("client_id")).toBe("client-1");
+		expect((await store.load())?.clientInformation?.client_id).toBe("client-1");
 	});
 
 	// #11426
