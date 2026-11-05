@@ -40,20 +40,18 @@ const ADDITIONAL_TOOLS_MODEL_IDS = new Set([
 export default defineProvider({
 	id: "openai-codex",
 	models: () =>
-		MODELS.map(
-			({ id, name, contextWindow }): Model<"openai-codex-responses"> => ({
-				id,
-				name,
-				api: "openai-codex-responses",
-				provider: "openai-codex",
-				baseUrl: "https://chatgpt.com/backend-api",
-				reasoning: true,
-				input: ["text", "image"],
-				cost: openAiStandardCost(id),
-				contextWindow,
-				maxTokens: 128000,
-			}),
-		),
+		MODELS.map(({ id, name, contextWindow }): Model<"openai-codex-responses"> => ({
+			id,
+			name,
+			api: "openai-codex-responses",
+			provider: "openai-codex",
+			baseUrl: "https://chatgpt.com/backend-api",
+			reasoning: true,
+			input: ["text", "image"],
+			cost: openAiStandardCost(id),
+			contextWindow,
+			maxTokens: 128000,
+		})),
 	finalize: (model) => {
 		if (supportsOpenAiXhigh(model.id)) mergeThinking(model, { minimal: "low" });
 		enableOpenAiGrammarTools(model);

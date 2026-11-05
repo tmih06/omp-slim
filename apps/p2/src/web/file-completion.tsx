@@ -200,6 +200,7 @@ export function useFileCompletion(
 	// biome-ignore lint/correctness/useExhaustiveDependencies: only the index's arrival triggers this.
 	useEffect(() => {
 		if (live && focused) query(false);
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by explicit lifecycle inputs, not recreated callbacks or objects.
 	}, [live]);
 
 	return {

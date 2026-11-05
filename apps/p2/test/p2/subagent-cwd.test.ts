@@ -101,6 +101,7 @@ test(
 			const chat = await holdIn(owner, Chat, { session, conversation: children.get(name)! }, "participant");
 			try {
 				const view = await until(chat.view, (value) => bash(value).length > 0, 30_000);
+				// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 				return { pwd: bash(view).join("\n"), cwd: (view?.docs["pi.agent"] as { cwd?: string }).cwd };
 			} finally {
 				chat.release();

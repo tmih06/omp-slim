@@ -22,9 +22,9 @@ async function hostDirectory(base: string): Promise<string> {
 	const dir = join(base, "host");
 	await mkdir(join(dir, "files", "sub"), { recursive: true });
 	await mkdir(join(dir, "files", ".uploads", "run"), { recursive: true });
-	await (await openStore(sqliteBackend(await openNodeSqliteDatabase(join(dir, "store.sqlite"))), context)).close(
-		context,
-	);
+	await (
+		await openStore(sqliteBackend(await openNodeSqliteDatabase(join(dir, "store.sqlite"))), context)
+	).close(context);
 	await writeFile(join(dir, "files", "a"), "file a");
 	await writeFile(join(dir, "files", "sub", "b"), "file b");
 	await writeFile(join(dir, "files", ".uploads", "run", "u"), "half");

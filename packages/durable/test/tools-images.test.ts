@@ -540,11 +540,9 @@ describe("createNodePhotonImages", () => {
 		const png = noisyPng(1100, 1100);
 		const copy = png.slice();
 		const threaded = await processor.prepare(png, "image/png", DEFAULT_IMAGE_LIMITS);
-		const inline = await (await createNodePhotonImages({ worker: false })).prepare(
-			png,
-			"image/png",
-			DEFAULT_IMAGE_LIMITS,
-		);
+		const inline = await (
+			await createNodePhotonImages({ worker: false })
+		).prepare(png, "image/png", DEFAULT_IMAGE_LIMITS);
 		expect(threaded).toEqual(inline);
 		expect(png).toEqual(copy);
 	}, 60_000);

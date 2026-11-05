@@ -151,12 +151,10 @@ function addImages(
 	}
 	if (input === "state-image-urls") {
 		// OpenRouter validates the images against the model that serves the request.
-		const parts = images.map(
-			(image): SystemOneImageUrlPart => ({
-				type: "image_url",
-				image_url: { url: `data:${image.mimeType};base64,${image.data}` },
-			}),
-		);
+		const parts = images.map((image): SystemOneImageUrlPart => ({
+			type: "image_url",
+			image_url: { url: `data:${image.mimeType};base64,${image.data}` },
+		}));
 		request.state = [...parts, request.state];
 		return;
 	}

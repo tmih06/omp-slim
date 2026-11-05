@@ -336,17 +336,15 @@ export const STORAGE_READ_BENCHMARKS: readonly StorageReadBenchmark[] = [
 		},
 		expected: ({ exactDocumentId }) => exactDocumentId,
 	},
-	...REPLAY_TAILS.map(
-		(tail): StorageReadBenchmark => ({
-			name: `document replay tail (${tail})`,
-			async run(storage, dataset) {
-				return Number(
-					(await storage.document(dataset.replayDocumentIds[tail], "current", BACKGROUND_CONTEXT))?.value.count,
-				);
-			},
-			expected: () => tail,
-		}),
-	),
+	...REPLAY_TAILS.map((tail): StorageReadBenchmark => ({
+		name: `document replay tail (${tail})`,
+		async run(storage, dataset) {
+			return Number(
+				(await storage.document(dataset.replayDocumentIds[tail], "current", BACKGROUND_CONTEXT))?.value.count,
+			);
+		},
+		expected: () => tail,
+	})),
 	{
 		name: "ancient historical read before newer base",
 		async run(storage, dataset) {
@@ -445,18 +443,15 @@ export const STORAGE_WRITE_BENCHMARKS: readonly StorageWriteBenchmark[] = [
 		expected: 100,
 		async run(storage) {
 			const writes = await Promise.all(
-				Array.from(
-					{ length: 100 },
-					async (_, index): Promise<StorageWrite> => ({
-						type: "entry",
-						value: {
-							id: await storage.mintId<EntryId>(),
-							conversationId: ROOT_CONVERSATION_ID,
-							kind: "benchmark.write",
-							data: { index, text: "x".repeat(128) },
-						},
-					}),
-				),
+				Array.from({ length: 100 }, async (_, index): Promise<StorageWrite> => ({
+					type: "entry",
+					value: {
+						id: await storage.mintId<EntryId>(),
+						conversationId: ROOT_CONVERSATION_ID,
+						kind: "benchmark.write",
+						data: { index, text: "x".repeat(128) },
+					},
+				})),
 			);
 			await commitWrites(storage, writes, BACKGROUND_CONTEXT);
 			return writes.length;

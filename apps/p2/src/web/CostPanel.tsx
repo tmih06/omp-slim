@@ -35,6 +35,7 @@ export function CostPanel({
 		return () => {
 			current = false;
 		};
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- Fetch once per opening, not for each recreated load callback.
 	}, []);
 	const costs = loaded && "costs" in loaded ? loaded.costs : [];
 	const maximum = Math.max(0, ...costs.map((entry) => entry.cost));

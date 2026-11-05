@@ -50,6 +50,7 @@ describe("artifacts (fake provider)", () => {
 				(value) => results(value).length === version && !(value?.docs["pi.live"] as { run?: unknown })?.run,
 			);
 			assert.equal(results(view).at(-1)?.isError, false);
+			// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 			assert.equal((results(view).at(-1)?.details as { version: number }).version, version);
 		}
 		const index = await until(list.artifacts, (value) => value?.length === 2);

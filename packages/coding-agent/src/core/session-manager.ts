@@ -553,18 +553,16 @@ export function buildSessionProjection(
 	for (const entry of contextEntries) {
 		if (entry.type === "context_edit") edits.set(entry.targetId, entry);
 	}
-	const projectedEntries = contextEntries.map(
-		(sourceEntry, index): ProjectedSessionEntry => ({
-			sourceEntry,
-			// buildContextEntries() may retain an older compaction entry because its
-			// raw ID lies inside the newest retained range. Only the newest compaction
-			// at index zero contributes a checkpoint and summary.
-			messages:
-				sourceEntry.type === "compaction" && index > 0
-					? []
-					: projectContextEntry(sourceEntry, edits.get(sourceEntry.id)),
-		}),
-	);
+	const projectedEntries = contextEntries.map((sourceEntry, index): ProjectedSessionEntry => ({
+		sourceEntry,
+		// buildContextEntries() may retain an older compaction entry because its
+		// raw ID lies inside the newest retained range. Only the newest compaction
+		// at index zero contributes a checkpoint and summary.
+		messages:
+			sourceEntry.type === "compaction" && index > 0
+				? []
+				: projectContextEntry(sourceEntry, edits.get(sourceEntry.id)),
+	}));
 	return {
 		entries: projectedEntries,
 		messages: projectedEntries.flatMap((entry) => entry.messages),

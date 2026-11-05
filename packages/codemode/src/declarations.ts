@@ -265,13 +265,11 @@ function constraintTags(schema: unknown): string {
 			? [property, branch as Record<string, unknown>]
 			: [property];
 	// Draft-04 and OpenAPI 3.0 make `minimum`/`maximum` exclusive with a boolean `exclusiveMinimum`/`exclusiveMaximum`.
-	const schemas = branches.map(
-		(schema): Record<string, unknown> => ({
-			...schema,
-			...(schema.exclusiveMinimum === true ? { minimum: undefined, exclusiveMinimum: schema.minimum } : {}),
-			...(schema.exclusiveMaximum === true ? { maximum: undefined, exclusiveMaximum: schema.maximum } : {}),
-		}),
-	);
+	const schemas = branches.map((schema): Record<string, unknown> => ({
+		...schema,
+		...(schema.exclusiveMinimum === true ? { minimum: undefined, exclusiveMinimum: schema.minimum } : {}),
+		...(schema.exclusiveMaximum === true ? { maximum: undefined, exclusiveMaximum: schema.maximum } : {}),
+	}));
 
 	const tags: string[] = [];
 	const isInteger = (type: unknown) => type === "integer" || (Array.isArray(type) && type.includes("integer"));

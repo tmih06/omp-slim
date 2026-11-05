@@ -46,6 +46,7 @@ test("location tools: schemas and defaults", () => {
 	// Offered to the model by default (not deferred): every main agent has them.
 	assert(extension.tools?.every((tool) => tool.deferred === undefined));
 	const move = extension.tools?.find((tool) => tool.name === "location_move");
+	// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 	assert.deepEqual(Object.keys((move?.parameters as { properties: object }).properties), ["location", "env", "cwd"]);
 });
 

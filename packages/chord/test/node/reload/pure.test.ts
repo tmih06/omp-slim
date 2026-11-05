@@ -100,34 +100,30 @@ describe.skipIf(CHROMIUM === undefined)("a reload of pure code", () => {
 	// The audit's F1: every `self.get` of a type on another host opens a new hold, which starts `loading`, so the new
 	// attempt of a pure object over a worker object parks instead of swapping in place.
 	// Expected to fail until the open design point is settled: "a parked swap keeps the old instance serving" (under review).
-	it.fails(
-		"keeps the view of a pure server object over a worker object bound when only the server object reloads",
-		async () => {
-			const app = await startReloadApp({
-				latch: LATCH_PLUGIN,
-				counter: counterPlugin({ code: "v1", placement: "worker" }),
-				summary: summaryPlugin("s1"),
-				alpha: webPlugin({
-					name: "alpha",
-					code: "1",
-					counter: { placement: "server", contract: "v1" },
-					summary: true,
-				}),
-			});
-			try {
-				await page.signIn(app, ["alpha"]);
-				await page.waitText("alpha", ".label", "s1(0)");
-				const settled = (await page.states("alpha")).length;
-				const result = await editAndApply(app, "summary", summaryPlugin("s2"));
-				expect(rolloutFailures(result)).toEqual([]);
-				await page.waitText("alpha", ".label", "s2(0)");
-				expect(await page.result(await page.call("alpha", "code"))).toEqual(ok("s2"));
-				expect((await page.states("alpha")).slice(settled)).toEqual([]);
-				expect(rolloutFates(result)).toEqual(["server/server: reload.summary(p1) swapped"]);
-			} finally {
-				await app.app.close(context);
-			}
-		},
-		120_000,
-	);
+	it.fails("keeps the view of a pure server object over a worker object bound when only the server object reloads", async () => {
+		const app = await startReloadApp({
+			latch: LATCH_PLUGIN,
+			counter: counterPlugin({ code: "v1", placement: "worker" }),
+			summary: summaryPlugin("s1"),
+			alpha: webPlugin({
+				name: "alpha",
+				code: "1",
+				counter: { placement: "server", contract: "v1" },
+				summary: true,
+			}),
+		});
+		try {
+			await page.signIn(app, ["alpha"]);
+			await page.waitText("alpha", ".label", "s1(0)");
+			const settled = (await page.states("alpha")).length;
+			const result = await editAndApply(app, "summary", summaryPlugin("s2"));
+			expect(rolloutFailures(result)).toEqual([]);
+			await page.waitText("alpha", ".label", "s2(0)");
+			expect(await page.result(await page.call("alpha", "code"))).toEqual(ok("s2"));
+			expect((await page.states("alpha")).slice(settled)).toEqual([]);
+			expect(rolloutFates(result)).toEqual(["server/server: reload.summary(p1) swapped"]);
+		} finally {
+			await app.app.close(context);
+		}
+	}, 120_000);
 });

@@ -1,0 +1,15 @@
+{
+	"$schema": "../../node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"tabWidth": 3,
+	"printWidth": 120,
+	"sortImports": false,
+	"sortPackageJson": false,
+	"ignorePatterns": [
+		"node_modules/**",
+		"dist/**",
+		"plugins/terminals/vendor/**",
+		"test/fixtures/v1-data/data/**",
+		"package-lock.json"
+	]
+}

@@ -55,7 +55,7 @@ describe("StreamDecoder", () => {
 			const bytes = randomFile(next);
 			const decoder = new StreamDecoder();
 			let text = "";
-			for (let offset = 0; offset < bytes.length; ) {
+			for (let offset = 0; offset < bytes.length;) {
 				const size = 1 + Math.floor(next() * 7);
 				text += decoder.decode(bytes.subarray(offset, offset + size));
 				offset += size;
@@ -74,7 +74,7 @@ describe("LineScanner", () => {
 			const startLine = Math.floor(next() * (lines.length + 2));
 			const endLine = next() < 0.3 ? undefined : startLine + 1 + Math.floor(next() * (lines.length + 1));
 			const scanner = new LineScanner(startLine, endLine);
-			for (let offset = 0; offset < file.length; ) {
+			for (let offset = 0; offset < file.length;) {
 				const size = 1 + Math.floor(next() * 7);
 				scanner.push(file.subarray(offset, offset + size));
 				offset += size;

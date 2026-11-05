@@ -242,6 +242,7 @@ export async function startServer(options: ServerOptions = {}): Promise<P2Server
 	let tuiBundle: Promise<TuiBundle> | undefined;
 	const getTuiBundle = (): Promise<TuiBundle> => {
 		if (tuiBundle) return tuiBundle;
+		// oxlint-disable-next-line eslint/prefer-const -- Separate declaration keeps callback types explicit during initialization.
 		let current!: Promise<TuiBundle>;
 		current = buildTuiBundle(plugins, options.tuiDirectory).then(
 			(bundle) => {
@@ -260,6 +261,7 @@ export async function startServer(options: ServerOptions = {}): Promise<P2Server
 	const retainedWebBundles: { readonly bundle: Promise<WebBundle>; readonly expires: number }[] = [];
 	const getWebBundle = (): Promise<WebBundle> => {
 		if (webBundle) return webBundle;
+		// oxlint-disable-next-line eslint/prefer-const -- Separate declaration keeps callback types explicit during initialization.
 		let current!: Promise<WebBundle>;
 		current = buildWebBundle(plugins).then(
 			(bundle) => {

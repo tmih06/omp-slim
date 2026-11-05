@@ -339,6 +339,7 @@ test("chat mode: chip, quoted replies and notes, /chat-mode (owner), /reply, @pi
 	typed(send, "yes, done");
 	send(ENTER);
 	await poll(() => (calls.send?.length ?? 0) === 1);
+	// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 	assert.equal((calls.send?.[0] as { replyTo?: number }).replyTo, 3);
 	await poll(async () => !(await screen()).includes("↪ Replying to"));
 	// @pi is offered first while chat mode is on.

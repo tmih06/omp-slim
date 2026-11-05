@@ -3,27 +3,27 @@
 # Get list of staged files before running check
 STAGED_FILES=$(git diff --cached --name-only)
 
-node scripts/check-lockfile-commit.mjs
+bun scripts/check-lockfile-commit.mjs
 if [ $? -ne 0 ]; then
   exit 1
 fi
 
 # Run the check script (formatting, linting, and type checking)
 echo "Running formatting, linting, and type checking..."
-npm run check
+bun run check
 if [ $? -ne 0 ]; then
   echo "❌ Checks failed. Please fix the errors before committing."
   exit 1
 fi
 
-# p2 has its own check (own biome.json, TypeScript 5.9; apps/ is outside the root Biome and tsc configs).
+# p2 has its own check (own Oxc configuration, TypeScript 5.9; apps/ is outside the root Oxc and tsc configs).
 # apps/ exists only in pi-private.
 if [ -d apps/p2 ]; then
   for file in $STAGED_FILES; do
     case "$file" in
-      apps/p2/*|packages/*|package.json|package-lock.json|tsconfig.json|tsconfig.base.json)
+      apps/p2/*|packages/*|package.json|bun.lock|tsconfig.json|tsconfig.base.json)
         echo "Checking apps/p2..."
-        npm --prefix apps/p2 run check
+        bun run --cwd apps/p2 check
         if [ $? -ne 0 ]; then
           echo "❌ apps/p2 checks failed."
           exit 1
@@ -37,7 +37,7 @@ fi
 RUN_BROWSER_SMOKE=0
 for file in $STAGED_FILES; do
   case "$file" in
-    packages/ai/*|packages/web-ui/*|package.json|package-lock.json)
+    packages/ai/*|packages/web-ui/*|package.json|bun.lock)
       RUN_BROWSER_SMOKE=1
       break
       ;;
@@ -46,7 +46,7 @@ done
 
 if [ $RUN_BROWSER_SMOKE -eq 1 ]; then
   echo "Running browser smoke check..."
-  npm run check:browser-smoke
+  bun run check:browser-smoke
   if [ $? -ne 0 ]; then
     echo "❌ Browser smoke check failed."
     exit 1

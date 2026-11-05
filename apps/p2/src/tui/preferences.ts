@@ -67,7 +67,7 @@ export function mergeSettings(...layers: TuiSettings[]): TuiSettings {
 }
 
 export function isThemeSetting(value: unknown): value is string {
-	// biome-ignore lint/suspicious/noControlCharactersInRegex: theme names must not carry control characters.
+	// oxlint-disable-next-line eslint/no-control-regex -- theme names must not carry control characters.
 	return typeof value === "string" && /^[^\x00-\x1f/]{1,64}(?:\/[^\x00-\x1f/]{1,64})?$/.test(value);
 }
 

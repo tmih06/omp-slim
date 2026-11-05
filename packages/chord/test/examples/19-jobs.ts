@@ -132,11 +132,10 @@ const facet = defineFacet<P>((host) => {
 			},
 		});
 		// What the views read: one object per run, kept while the run's entry is the same object (`mapShared`).
-		const toShell = mapShared(
-			(entry: (typeof shell.running.value)[number]): Static<typeof Shell> =>
-				entry.phase === "blocked"
-					? { id: entry.id, phase: entry.phase, command: "?", output: "" }
-					: { id: entry.id, phase: entry.phase, command: entry.args.command, output: entry.state.output },
+		const toShell = mapShared((entry: (typeof shell.running.value)[number]): Static<typeof Shell> =>
+			entry.phase === "blocked"
+				? { id: entry.id, phase: entry.phase, command: "?", output: "" }
+				: { id: entry.id, phase: entry.phase, command: entry.args.command, output: entry.state.output },
 		);
 		return {
 			entries: self.derive([entries], ([d]) => d.list),
@@ -153,9 +152,11 @@ const facet = defineFacet<P>((host) => {
 		const store = self.get(ChatStore, {});
 		if (principal.kind !== "owner") {
 			// A guest sees no output: the view drops it (computed once per variant in a real store, §12).
-			const strip = mapShared(
-				(s: Static<typeof Shell>): Static<typeof GuestShell> => ({ id: s.id, phase: s.phase, command: s.command }),
-			);
+			const strip = mapShared((s: Static<typeof Shell>): Static<typeof GuestShell> => ({
+				id: s.id,
+				phase: s.phase,
+				command: s.command,
+			}));
 			return {
 				variant: "guest",
 				members: { entries: store.entries, shells: self.derive([store.shells], ([list]) => strip(list)) },

@@ -64,6 +64,7 @@ async function allEntries(conversation: Conversation, order?: ScanOrder): Promis
 	let cursor: Parameters<Conversation["entries"]>[2];
 	do {
 		const page = await conversation.entries(order === undefined ? {} : { order }, 2, cursor, context);
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		for (const entry of page.items) texts.push((entry.model?.[0] as { content: string }).content);
 		cursor = page.next;
 	} while (cursor !== undefined);

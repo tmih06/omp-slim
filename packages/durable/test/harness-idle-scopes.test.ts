@@ -474,7 +474,9 @@ describe("incremental idle state", () => {
 					continue;
 				}
 				const conversation = random() < 0.5;
-				const created = await (await handle(owner.conversation)).commit(async (tx) => {
+				const created = await (
+					await handle(owner.conversation)
+				).commit(async (tx) => {
 					if (!conversation) {
 						const id = await tx.createTask(Work, { name }, { ownership: { kind: "task", taskId: owner.id } });
 						return { id, into: owner.conversation, read: false };

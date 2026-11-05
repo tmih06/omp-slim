@@ -345,12 +345,10 @@ export class ModelRuntime implements Models {
 		const [available, checks, credentials] = await Promise.all([
 			this.models.getAvailable(undefined, { signal }),
 			Promise.all(
-				providers.map(
-					async (provider): Promise<[string, AuthCheck | undefined]> => [
-						provider.id,
-						await this.models.checkAuth(provider.id, { signal }),
-					],
-				),
+				providers.map(async (provider): Promise<[string, AuthCheck | undefined]> => [
+					provider.id,
+					await this.models.checkAuth(provider.id, { signal }),
+				]),
 			),
 			this.credentials.list({ signal }),
 		]);

@@ -3,10 +3,4 @@
 // server; `workerMain` is the worker's side (also `@earendil-works/chord/workers/child`, without esbuild). Node-only.
 
 export * from "./child.ts";
-export {
-	createWorkers,
-	type WorkerState,
-	type Workers,
-	type WorkersError,
-	type WorkersOptions,
-} from "./workers.ts";
+export { createWorkers, type WorkerState, type Workers, type WorkersError, type WorkersOptions } from "./workers.ts";

@@ -85,15 +85,13 @@ export interface Self<P extends Principal = Principal> extends RoutineDeclaratio
 	 */
 	derive<const S extends readonly (Watchable<unknown> | NativeWatchable<unknown>)[], T extends JsonValue>(
 		sources: S,
-		compute: (
-			values: {
-				readonly [I in keyof S]: S[I] extends Watchable<infer V>
+		compute: (values: {
+			readonly [I in keyof S]: S[I] extends Watchable<infer V>
+				? V
+				: S[I] extends NativeWatchable<infer V>
 					? V
-					: S[I] extends NativeWatchable<infer V>
-						? V
-						: never;
-			},
-		) => T,
+					: never;
+		}) => T,
 	): Watchable<T>;
 	/** A reference to another object, live once this object is, released when it ends. */
 	get<C extends Contract>(Type: C, params: ParamsOf<C>): Reference<C>;
@@ -420,15 +418,13 @@ export class Attempt implements StoreSelf, KeyDeclarer, RegistryWaiter {
 
 	derive<const S extends readonly (Watchable<unknown> | NativeWatchable<unknown>)[], T extends JsonValue>(
 		sources: S,
-		compute: (
-			values: {
-				readonly [I in keyof S]: S[I] extends Watchable<infer V>
+		compute: (values: {
+			readonly [I in keyof S]: S[I] extends Watchable<infer V>
+				? V
+				: S[I] extends NativeWatchable<infer V>
 					? V
-					: S[I] extends NativeWatchable<infer V>
-						? V
-						: never;
-			},
-		) => T,
+					: never;
+		}) => T,
 	): Watchable<T> {
 		this.#assertDeclaring("derive");
 		// The values are the sources' values, in order; the result is `T`.

@@ -330,7 +330,12 @@ describe("building a facet: the import table", () => {
 		});
 		const { plugins } = await discoverPlugins([first, second], { kinds: KINDS }, context);
 		const build = (name: string) =>
-			buildFacet(plugins.find((each) => each.name === name)!, "worker", { ...NODE, plugins }, context);
+			buildFacet(
+				plugins.find((each) => each.name === name)!,
+				"worker",
+				{ ...NODE, plugins },
+				context,
+			);
 		const real = await realpath(first);
 		expect(script(await build("@test/user")).copied).toEqual([
 			join(real, "contracts", "contract.ts"),
@@ -643,7 +648,12 @@ describe("building a facet: what lies outside the plugin (slice 12 fix round 1: 
 		await symlink(join(app, "src", "core.ts"), join(c, "node_modules", "dep", "index.js"));
 		const { plugins } = await discoverPlugins([root], { kinds: KINDS }, context);
 		const build = (name: string) =>
-			buildFacet(plugins.find((each) => each.name === name)!, "worker", { ...NODE, plugins }, context);
+			buildFacet(
+				plugins.find((each) => each.name === name)!,
+				"worker",
+				{ ...NODE, plugins },
+				context,
+			);
 		const outside = /: resolves outside the plugin's node_modules \(.*src\/core\.ts\)$/;
 		expect(errors(await build("@test/a"))).toEqual([expect.stringMatching(outside)]);
 		expect(errors(await build("@test/b"))).toEqual([expect.stringMatching(outside)]);
@@ -660,7 +670,12 @@ describe("building a facet: what lies outside the plugin (slice 12 fix round 1: 
 		await symlink(join(kind, "web.tsx"), join(kind, "worker.ts"));
 		const { plugins } = await discoverPlugins([root], { kinds: KINDS }, context);
 		const build = (name: string) =>
-			buildFacet(plugins.find((each) => each.name === name)!, "worker", { ...NODE, kinds: KINDS, plugins }, context);
+			buildFacet(
+				plugins.find((each) => each.name === name)!,
+				"worker",
+				{ ...NODE, kinds: KINDS, plugins },
+				context,
+			);
 		expect(errors(await build("@test/out"))).toEqual([
 			expect.stringMatching(/^worker\.ts: the facet file links out of its plugin/),
 		]);
@@ -731,7 +746,12 @@ describe("building a facet: single-file plugins (slice 12 §4)", () => {
 		});
 		const { plugins } = await discoverPlugins([root], { kinds: KINDS }, context);
 		const build = (name: string) =>
-			buildFacet(plugins.find((each) => each.name === name)!, "server", { ...NODE, plugins }, context);
+			buildFacet(
+				plugins.find((each) => each.name === name)!,
+				"server",
+				{ ...NODE, plugins },
+				context,
+			);
 		expect(sourcesOf(script(await build("hello")))).toEqual(["hello.server.ts"]);
 		const hint =
 			'a single-file plugin imports only host packages (the app\'s API); make it a directory "bad/" with a package.json';

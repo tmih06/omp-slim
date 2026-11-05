@@ -350,14 +350,11 @@ function initialDocuments(): Record<DocumentKey, JsonObject> {
 			required: ["path"],
 		},
 	}));
-	const inboxItems = Array.from(
-		{ length: 16 },
-		(_, index): InboxItem => ({
-			id: index + 1,
-			mode: index % 3 === 0 ? "steer" : "followUp",
-			text: payloadText(960 + (index % 4) * 48, 40_000 + index),
-		}),
-	);
+	const inboxItems = Array.from({ length: 16 }, (_, index): InboxItem => ({
+		id: index + 1,
+		mode: index % 3 === 0 ? "steer" : "followUp",
+		text: payloadText(960 + (index % 4) * 48, 40_000 + index),
+	}));
 	const liveTools = Array.from({ length: 8 }, (_, index) => ({
 		callId: `initial-call-${index}`,
 		name: index % 2 === 0 ? "read" : "bash",

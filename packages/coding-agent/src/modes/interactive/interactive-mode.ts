@@ -5050,6 +5050,7 @@ export class InteractiveMode {
 
 	private showSettingsSelector(): void {
 		this.showSelector((done) => {
+			// oxlint-disable-next-line eslint/prefer-const -- Callbacks may run before selector initialization completes.
 			let selector: SettingsSelectorComponent | undefined;
 			const defaultProvider = this.settingsManager.getDefaultProvider();
 			const defaultModelId = this.settingsManager.getDefaultModel();

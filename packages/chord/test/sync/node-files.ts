@@ -47,12 +47,10 @@ export const nodeFiles: SyncFileSystem = {
 	renameFile: (source, destination) => attempt(() => rename(source, destination)),
 	listDir: (path) =>
 		attempt(async () =>
-			(await readdir(path, { withFileTypes: true })).map(
-				(entry): SyncFileInfo => ({
-					name: entry.name,
-					kind: entry.isDirectory() ? "directory" : entry.isSymbolicLink() ? "symlink" : "file",
-				}),
-			),
+			(await readdir(path, { withFileTypes: true })).map((entry): SyncFileInfo => ({
+				name: entry.name,
+				kind: entry.isDirectory() ? "directory" : entry.isSymbolicLink() ? "symlink" : "file",
+			})),
 		),
 	createDir: (path, options) => attempt(async () => void (await mkdir(path, options))),
 	remove: (path, options) => attempt(() => rm(path, options)),

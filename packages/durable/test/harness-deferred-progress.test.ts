@@ -409,9 +409,9 @@ describe("compaction", () => {
 		]);
 		let opened = await open(storage, setup);
 		for (const label of ["u1", "u2", "u3"]) {
-			await (await opened.root.submit({ type: "input", content: `${label} ${"word ".repeat(100)}` }, context)).wait(
-				context,
-			);
+			await (
+				await opened.root.submit({ type: "input", content: `${label} ${"word ".repeat(100)}` }, context)
+			).wait(context);
 		}
 		const id = await opened.root.compact(undefined, context);
 		await summarizing.promise;

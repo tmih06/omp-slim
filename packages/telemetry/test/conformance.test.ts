@@ -39,7 +39,9 @@ describe("InMemoryTelemetryContext conformance", () => {
 		const [first] = context.getSpans();
 		expect(first?.settled).toBe(true);
 		expect(first?.endSequence).toBe(1);
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		(first?.attributes as SpanAttributes).tags = ["mutated"];
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		(first?.events[0]?.attributes as SpanAttributes).value = 2;
 
 		const [second] = context.getSpans();

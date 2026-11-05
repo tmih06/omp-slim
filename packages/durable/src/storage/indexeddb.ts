@@ -149,7 +149,7 @@ class IndexedDbFailure extends Error {}
  */
 function fromIndexedDb(error: unknown): boolean {
 	const seen = new Set<unknown>();
-	for (let at: unknown = error; at !== null && typeof at === "object" && !seen.has(at); ) {
+	for (let at: unknown = error; at !== null && typeof at === "object" && !seen.has(at);) {
 		if (at instanceof DOMException || at instanceof IndexedDbFailure) return true;
 		seen.add(at);
 		at = (at as { cause?: unknown }).cause;

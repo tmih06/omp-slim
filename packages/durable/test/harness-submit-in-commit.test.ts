@@ -570,6 +570,7 @@ describe("submit inside the caller's commit", () => {
 		await harness.waitForIdle(context);
 		const entries = [...(await other.entries({}, 100, undefined, context)).items].reverse();
 		const delegated = entries.find((entry) => entry.kind === "app.delegated");
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		const submission = (delegated?.data as { submission: SubmissionId }).submission;
 		const settled = await settledStatus(harness, submission);
 		if (settled.type !== "input" || settled.status !== "done") throw new Error(`Unexpected ${settled.status}`);

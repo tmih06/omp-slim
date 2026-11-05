@@ -89,10 +89,8 @@ export function Decode(value: string): string {
 			if (inIdx >= value.length) ThrowDontCare(); // throw new Error('Invalid punycode: unexpected end of input')
 			const ch = value.charCodeAt(inIdx++);
 			let digit: number;
-			if (ch >= 0x61 && ch <= 0x7a)
-				digit = ch - 0x61; // a-z => 0-25
-			else if (ch >= 0x30 && ch <= 0x39)
-				digit = ch - 0x30 + 26; // 0-9 => 26-35
+			if (ch >= 0x61 && ch <= 0x7a) digit = ch - 0x61; // a-z => 0-25
+			else if (ch >= 0x30 && ch <= 0x39) digit = ch - 0x30 + 26; // 0-9 => 26-35
 			// else if (ch >= 0x41 && ch <= 0x5a) digit = ch - 0x41 // A-Z => 0-25 // (no-spec-coverage)
 			else ThrowDontCare(); // throw new Error('Invalid punycode: bad digit character')
 			i += digit * w;

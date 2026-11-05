@@ -293,7 +293,7 @@ describe("RemoteExecutionEnv against NodeExecutionEnv", () => {
 				const reader = await env.openDirReader(".", context);
 				const pages: unknown[] = [];
 				if (reader.ok) {
-					for (let done = false; !done; ) {
+					for (let done = false; !done;) {
 						const page = await reader.value.next(2, context);
 						pages.push(page);
 						done = !page.ok || page.value.done;

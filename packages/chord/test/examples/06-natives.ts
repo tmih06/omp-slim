@@ -41,6 +41,7 @@ const facet = defineFacet((host) => {
 		);
 		// The factory only declares: a value is there once its open resolved.
 		try {
+			// oxlint-disable-next-line eslint/no-unused-expressions -- This read exercises a getter or calls that must throw.
 			config.value;
 		} catch (error) {
 			if (isChordError(error, "not_ready")) console.log(`${zone}: in the factory, ${error.message}`);

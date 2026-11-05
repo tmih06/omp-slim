@@ -109,9 +109,9 @@ async function cacheReadAfterToolChange(token: string, legacyOrder: boolean): Pr
 		});
 		harness.resume();
 		const ask = async (text: string): Promise<AssistantMessage> => {
-			const settled = await (await root.submit({ type: "input", content: `Reply exactly: ${text}` }, context)).wait(
-				context,
-			);
+			const settled = await (
+				await root.submit({ type: "input", content: `Reply exactly: ${text}` }, context)
+			).wait(context);
 			if (settled.status !== "done" || settled.type !== "input") throw new Error(`Unexpected ${settled.status}`);
 			const record = await harness.commit((tx) => tx.entry(AssistantEntry, settled.answer), context);
 			const message = record?.model?.[0] as AssistantMessage | undefined;

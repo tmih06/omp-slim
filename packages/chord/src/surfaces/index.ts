@@ -4,12 +4,7 @@
 
 export { followActiveLanguage, hostLanguage, type LanguageFollower } from "./active-language.ts";
 export { followActiveTheme, type ThemeFollower } from "./active-theme.ts";
-export {
-	type Client,
-	type ClientError,
-	type ClientOptions,
-	startClient,
-} from "./client.ts";
+export { type Client, type ClientError, type ClientOptions, startClient } from "./client.ts";
 export {
 	type ConnectionState,
 	keepConnected,
@@ -59,9 +54,4 @@ export {
 	themesFacet,
 	themeVariables,
 } from "./themes.ts";
-export {
-	type Translation,
-	type TranslationIndex,
-	Translations,
-	translationsFacet,
-} from "./translations.ts";
+export { type Translation, type TranslationIndex, Translations, translationsFacet } from "./translations.ts";

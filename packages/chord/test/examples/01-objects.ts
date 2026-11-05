@@ -59,6 +59,7 @@ const again = await host.get(Greeter, { language: "de" }, context);
 german.release();
 again.release();
 try {
+	// oxlint-disable-next-line eslint/no-unused-expressions -- This read exercises a getter or calls that must throw.
 	german.language.value;
 } catch (error) {
 	if (isChordError(error, "released")) console.log("after release:", error.message);

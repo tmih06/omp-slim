@@ -529,7 +529,7 @@ class NodeBinaryReader implements BinaryReader {
 		}
 		const chunk = new Uint8Array(64 * 1024);
 		try {
-			for (let position = 0; ; ) {
+			for (let position = 0; ;) {
 				const { bytesRead } = await this.file.read(chunk, 0, chunk.length, position);
 				const afterReadAbort = abortResult<LineScan>(context.abortSignal, this.path);
 				if (afterReadAbort) return afterReadAbort;

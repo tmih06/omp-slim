@@ -23,14 +23,11 @@ function seedImageHistory(harness: Harness, imageData: string): void {
 		role: "toolResult",
 		toolCallId: "read-images",
 		toolName: "read",
-		content: Array.from(
-			{ length: 89 },
-			(): ImageContent => ({
-				type: "image",
-				mimeType: "image/png",
-				data: imageData,
-			}),
-		),
+		content: Array.from({ length: 89 }, (): ImageContent => ({
+			type: "image",
+			mimeType: "image/png",
+			data: imageData,
+		})),
 		isError: false,
 		timestamp,
 	});

@@ -1,14 +1,7 @@
 // Session sync over a store's outbox (`@earendil-works/chord/sync`, experimental). Portable: the remote and the host's
 // sync state are interfaces, and the directory-backed ones take their file operations (`SyncFileSystem`).
 
-export {
-	decodeBatch,
-	decodeBatchLines,
-	decodeSnapshot,
-	encodeBatch,
-	encodeSnapshot,
-	type SyncBody,
-} from "./batch.ts";
+export { decodeBatch, decodeBatchLines, decodeSnapshot, encodeBatch, encodeSnapshot, type SyncBody } from "./batch.ts";
 export {
 	APPLY_BYTES,
 	BATCH_BYTES,

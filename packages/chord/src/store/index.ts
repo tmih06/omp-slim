@@ -37,13 +37,7 @@ export type { Outbox, OutboxCommit } from "./outbox.ts";
 export { type ColumnRefs, type Query, query } from "./query.ts";
 export { openStore, type Store, type StoreOptions } from "./store.ts";
 export { defineTable, type KeyOf, type TableDefinition, type TableOptions } from "./table.ts";
-export {
-	type AddedColumn,
-	evolveTable,
-	type PatchOf,
-	type TableEditor,
-	type TableTailEditor,
-} from "./table-evolve.ts";
+export { type AddedColumn, evolveTable, type PatchOf, type TableEditor, type TableTailEditor } from "./table-evolve.ts";
 export type { Page, PageOptions, Table, TableOf } from "./table-handle.ts";
 export { compareText } from "./text.ts";
 export type { StoreWrite } from "./writes.ts";

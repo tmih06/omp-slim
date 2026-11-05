@@ -149,37 +149,33 @@ describe.skipIf(CHROMIUM === undefined)("a rollout across hosts", () => {
 	// contract moves to v2 without `accepts`, and the server's summary, which holds it, changes with it (it copies the
 	// contract file). The server step runs first: the summary's new request meets the old worker serving v1.
 	// Expected to fail until the open design point is settled: "a parked swap keeps the old instance serving" (under review).
-	it.fails(
-		"keeps the view of a server consumer bound while its worker provider moves to a new version with it",
-		async () => {
-			const app = await startReloadApp({
-				latch: LATCH_PLUGIN,
-				counter: counterPlugin({ code: "v1", placement: "worker" }),
-				summary: summaryPlugin("s1"),
-				alpha: webPlugin({
-					name: "alpha",
-					code: "1",
-					counter: { placement: "server", contract: "v1" },
-					summary: true,
-				}),
-			});
-			try {
-				await page.signIn(app, ["alpha"]);
-				await page.waitText("alpha", ".label", "s1(0)");
-				const settled = (await page.states("alpha")).length;
-				const result = await editAndApply(
-					app,
-					"counter",
-					counterPlugin({ code: "v2", placement: "worker", contract: "v2" }),
-				);
-				expect(rolloutFailures(result)).toEqual([]);
-				await page.waitText("alpha", ".state", "live");
-				expect(await page.result(await page.call("alpha", "code"))).toEqual(ok("s1"));
-				expect((await page.states("alpha")).slice(settled)).toEqual([]);
-			} finally {
-				await app.app.close(context);
-			}
-		},
-		120_000,
-	);
+	it.fails("keeps the view of a server consumer bound while its worker provider moves to a new version with it", async () => {
+		const app = await startReloadApp({
+			latch: LATCH_PLUGIN,
+			counter: counterPlugin({ code: "v1", placement: "worker" }),
+			summary: summaryPlugin("s1"),
+			alpha: webPlugin({
+				name: "alpha",
+				code: "1",
+				counter: { placement: "server", contract: "v1" },
+				summary: true,
+			}),
+		});
+		try {
+			await page.signIn(app, ["alpha"]);
+			await page.waitText("alpha", ".label", "s1(0)");
+			const settled = (await page.states("alpha")).length;
+			const result = await editAndApply(
+				app,
+				"counter",
+				counterPlugin({ code: "v2", placement: "worker", contract: "v2" }),
+			);
+			expect(rolloutFailures(result)).toEqual([]);
+			await page.waitText("alpha", ".state", "live");
+			expect(await page.result(await page.call("alpha", "code"))).toEqual(ok("s1"));
+			expect((await page.states("alpha")).slice(settled)).toEqual([]);
+		} finally {
+			await app.app.close(context);
+		}
+	}, 120_000);
 });

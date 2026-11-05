@@ -128,6 +128,7 @@ export function DirectoryPicker({
 	};
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: lists again when the folder or environment changes; load is recreated each render.
+	// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by the explicit lifecycle inputs, not recreated callbacks or objects.
 	useEffect(() => load(shown), [shown, env, service]);
 	const moves = moving !== undefined && moving.env !== env;
 

@@ -1530,7 +1530,7 @@ export class TaskScheduler {
 	 */
 	#nearestLiveAbove(node: TaskNode, overlay?: Overlay): AnyTaskRecord | undefined {
 		this.#record(INTENT_KEY);
-		for (let current = node; !current.background; ) {
+		for (let current = node; !current.background;) {
 			const owner = current.owner ?? this.#edge(current.conversationId, overlay);
 			if (owner === undefined || owner === null) return undefined;
 			const record = overlay?.tasks.get(owner) ?? this.#liveRecord(owner);

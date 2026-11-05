@@ -249,7 +249,7 @@ type Step = { readonly read: string; readonly snapshot: JsonValue | undefined; r
 function stream(text: string, chunkSize: number | Random): Step[] {
 	const parser = new StreamingJsonParser();
 	const steps: Step[] = [];
-	for (let index = 0; index < text.length; ) {
+	for (let index = 0; index < text.length;) {
 		const size = typeof chunkSize === "number" ? chunkSize : 1 + Math.floor(chunkSize() * 12);
 		parser.append(text.slice(index, index + size));
 		index += size;
@@ -636,7 +636,7 @@ class Mirror {
 function mirrorStream(text: string, size: number | Random): Mirror {
 	const parser = new StreamingJsonParser();
 	const mirror = new Mirror();
-	for (let index = 0; index < text.length; ) {
+	for (let index = 0; index < text.length;) {
 		const length = typeof size === "number" ? size : 1 + Math.floor(size() * 12);
 		mirror.apply(parser.append(text.slice(index, index + length)));
 		index += length;

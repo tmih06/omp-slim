@@ -247,6 +247,7 @@ describe("session relocation (fake provider)", () => {
 		const gone = (ref = chat) =>
 			new Promise<void>((resolve) => {
 				// Its worker ended: the reference loses its object (loading again, or failed while it restarts).
+				// oxlint-disable-next-line eslint/prefer-const -- Separate declaration keeps callback types explicit during initialization.
 				let stop: (() => void) | undefined;
 				stop = follow(ref.state, (value) => {
 					if (value.kind === "live") return;

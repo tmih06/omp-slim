@@ -121,6 +121,7 @@ test("new-window opens at the calling conversation's location, keyed by the call
 		["read", { target: "id-3", from: 0, wait: { until: "quiet", timeoutMs: 10_000 } }],
 	]);
 	assert.deepEqual(result.structuredOutput, { window: 3, running: true, output: "$ " });
+	// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 	assert.equal((result.output?.[0] as { text: string }).text, "window 3 · at the prompt\n$ ");
 	const absolute = recorder();
 	await run(absolute.backend, "new-window", ["-c", "/tmp", "-w", "none"]);
@@ -201,6 +202,7 @@ test("results: the screen of full-screen programs, skipped output, timeouts, win
 		timedOut: true,
 	});
 	assert.equal(
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		(screen.output?.[0] as { text: string }).text,
 		"window 1 · running vim · full-screen program\nVIM\n(timed out: still running (foreground: vim))",
 	);
@@ -215,6 +217,7 @@ test("results: the screen of full-screen programs, skipped output, timeouts, win
 		],
 	});
 	assert.equal(
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		(listed.output?.[0] as { text: string }).text,
 		"1: dev · /work · opened by agent · running vim\n2: gpu:/srv · opened by user · exited with code 2",
 	);

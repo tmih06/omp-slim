@@ -284,6 +284,7 @@ describe("data-only writes", () => {
 			kind: "chat.message",
 			id: settled.status === "done" && settled.entry,
 		});
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		expect((shown?.docs["pi.live"] as LiveState).run?.inputs).toEqual([input.id]);
 		// A repeated request ID returns the same write without a second entry.
 		expect((await root.submit({ type: "write", entry: chat, requestId: "bob:1" }, context)).id).toBe(write.id);

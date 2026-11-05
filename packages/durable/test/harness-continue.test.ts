@@ -321,9 +321,9 @@ describe("continue", () => {
 						return created.id;
 					}, callContext);
 					const handle = (await api.conversation(child, callContext))!;
-					const first = await (await handle.submit({ type: "input", content: "work" }, callContext)).wait(
-						callContext,
-					);
+					const first = await (
+						await handle.submit({ type: "input", content: "work" }, callContext)
+					).wait(callContext);
 					outcome.first = first.status;
 					const resumed = await handle.submit({ type: "continue" }, callContext);
 					await busy.promise;

@@ -170,15 +170,13 @@ class SqlRemote implements SessionSyncMaintenance {
 		const batches = this.#sql
 			.exec<SlotRow>("SELECT after, upto, device, archive, folded FROM r_slots ORDER BY after")
 			.toArray()
-			.map(
-				(slot): BatchInfo => ({
-					after: slot.after,
-					to: slot.upto,
-					device: slot.device,
-					...(slot.archive ? { archive: true as const } : {}),
-					...(slot.folded ? { folded: true as const } : {}),
-				}),
-			);
+			.map((slot): BatchInfo => ({
+				after: slot.after,
+				to: slot.upto,
+				device: slot.device,
+				...(slot.archive ? { archive: true as const } : {}),
+				...(slot.folded ? { folded: true as const } : {}),
+			}));
 		const snapshots = this.#sql
 			.exec<{ upto: number }>("SELECT upto FROM r_snapshots")
 			.toArray()

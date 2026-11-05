@@ -10,11 +10,11 @@ export const TERMINAL_COLOR_QUERY = `\x1b]10;?\x07\x1b]11;?\x07${Array.from(
 	{ length: PALETTE_SIZE },
 	(_, index) => `\x1b]4;${index};?\x07`,
 ).join("")}\x1b[c`;
-// biome-ignore lint/suspicious/noControlCharactersInRegex: terminal reply grammar.
+// oxlint-disable-next-line eslint/no-control-regex -- terminal reply grammar.
 const OSC_COLOR = /^\x1b\](?:(1[01])|4;(\d{1,3}));([^\x07\x1b]*)(?:\x07|\x1b\\)$/i;
-// biome-ignore lint/suspicious/noControlCharactersInRegex: terminal reply grammar.
+// oxlint-disable-next-line eslint/no-control-regex -- terminal reply grammar.
 const DEVICE_ATTRIBUTES = /^\x1b\[\?[\d;]*c$/;
-// biome-ignore lint/suspicious/noControlCharactersInRegex: terminal reply grammar.
+// oxlint-disable-next-line eslint/no-control-regex -- terminal reply grammar.
 const SCHEME_REPORT = /^(?:\x1b\[\?997;(1|2)n)+$/;
 
 function channel(hex: string): number | undefined {

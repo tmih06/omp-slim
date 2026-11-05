@@ -5,13 +5,13 @@
 	"type": "module",
 	"main": "dist/index.js",
 	"scripts": {
-		"clean": "node ../../scripts/package-files.mjs clean dist",
+		"clean": "bun ../../scripts/package-files.mjs clean dist",
 		"build": "tsc -p tsconfig.build.json",
 		"build:native:darwin": "native/darwin/build.sh",
 		"build:native:linux": "native/linux/build.sh",
-		"build:native:win32": "node native/win32/build.mjs",
+		"build:native:win32": "bun native/win32/build.mjs",
 		"test": "node --test --test-reporter=dot --test-reporter-destination=stdout test/*.test.ts",
-		"prepublishOnly": "npm run clean && npm run build"
+		"prepublishOnly": "bun run clean && bun run build"
 	},
 	"files": [
 		"dist/**/*",

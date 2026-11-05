@@ -98,7 +98,7 @@ async function ensureBigFile(): Promise<void> {
 	const file = await open(BIG_FILE, "w");
 	try {
 		let index = 0;
-		for (let written = 0; written < GIB; ) {
+		for (let written = 0; written < GIB;) {
 			let block = "";
 			while (block.length < 64 << 20) block += `Line ${index++}: ${LINE}: ${(index * 7919).toString(16)}\n`;
 			const bytes = Buffer.from(block).subarray(0, GIB - written);

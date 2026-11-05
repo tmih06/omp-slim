@@ -99,7 +99,7 @@ export function joinLinkOrigin(value: string): URL {
 /** A display name as the join page accepts it: one line, at most 40 characters, not verified by anyone. */
 export function guestName(value: string): string {
 	const name = value
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: names never carry terminal controls.
+		// oxlint-disable-next-line eslint/no-control-regex -- names never carry terminal controls.
 		.replace(/[\x00-\x1f\x7f-\x9f]/g, "")
 		.trim()
 		.slice(0, 40);

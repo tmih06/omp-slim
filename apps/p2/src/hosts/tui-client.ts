@@ -400,6 +400,7 @@ export async function startTuiClient(options: {
 			const source = await readBounded(await request(manifest.bundle), MAX_TUI_BUNDLE);
 			if (createHash("sha256").update(source).digest("hex") !== manifest.version)
 				throw new Error("TUI bundle version hash mismatch");
+			// oxlint-disable-next-line eslint/prefer-const -- Separate declaration keeps callback types explicit during initialization.
 			let candidate!: TuiSandbox;
 			candidate = new TuiSandbox(source, {
 				input: {

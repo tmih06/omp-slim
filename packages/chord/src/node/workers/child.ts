@@ -4,10 +4,4 @@
 
 export type { CrossedError } from "./control.ts";
 export { type ProcessLock, processLock } from "./lock.ts";
-export {
-	type WorkerMainOptions,
-	type WorkerPlugins,
-	type WorkerResult,
-	type WorkerStart,
-	workerMain,
-} from "./main.ts";
+export { type WorkerMainOptions, type WorkerPlugins, type WorkerResult, type WorkerStart, workerMain } from "./main.ts";

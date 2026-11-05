@@ -39,40 +39,38 @@ function textOf(result: AgentToolResult<unknown>): string {
  */
 export async function createMcpTools(client: McpClient, prefix: string): Promise<AgentTool[]> {
 	const tools = await client.listTools();
-	return tools.map(
-		(tool): AgentTool => ({
-			name: toToolName(prefix, tool.name),
-			label: tool.title ?? tool.name,
-			description: tool.description ?? tool.title ?? `MCP tool ${tool.name}`,
-			// Providers require an object schema, and some reject one without `properties`.
-			parameters: {
-				...tool.inputSchema,
-				type: "object",
-				properties: tool.inputSchema.properties ?? {},
-			},
-			outputSchema: tool.outputSchema,
-			execute: async (_toolCallId, params, signal, onUpdate) => {
-				const result = await client.callTool(tool.name, params as Record<string, unknown>, {
-					signal,
-					onProgress: (progress) => {
-						const text = progress.message ?? `Progress ${progress.progress}`;
-						onUpdate?.({ content: [{ type: "text", text }], details: undefined });
-					},
-				});
-				const content = toLlmContent(result);
-				if (result.isError && content.length === 0) {
-					content.push({ type: "text", text: `MCP tool ${tool.name} failed` });
-				}
-				return {
-					content,
-					details: undefined,
-					structuredContent: result.structuredContent as JsonValue | undefined,
-					// MCP reports tool failures in the result instead of as a protocol error.
-					isError: result.isError === true,
-				};
-			},
-		}),
-	);
+	return tools.map((tool): AgentTool => ({
+		name: toToolName(prefix, tool.name),
+		label: tool.title ?? tool.name,
+		description: tool.description ?? tool.title ?? `MCP tool ${tool.name}`,
+		// Providers require an object schema, and some reject one without `properties`.
+		parameters: {
+			...tool.inputSchema,
+			type: "object",
+			properties: tool.inputSchema.properties ?? {},
+		},
+		outputSchema: tool.outputSchema,
+		execute: async (_toolCallId, params, signal, onUpdate) => {
+			const result = await client.callTool(tool.name, params as Record<string, unknown>, {
+				signal,
+				onProgress: (progress) => {
+					const text = progress.message ?? `Progress ${progress.progress}`;
+					onUpdate?.({ content: [{ type: "text", text }], details: undefined });
+				},
+			});
+			const content = toLlmContent(result);
+			if (result.isError && content.length === 0) {
+				content.push({ type: "text", text: `MCP tool ${tool.name} failed` });
+			}
+			return {
+				content,
+				details: undefined,
+				structuredContent: result.structuredContent as JsonValue | undefined,
+				// MCP reports tool failures in the result instead of as a protocol error.
+				isError: result.isError === true,
+			};
+		},
+	}));
 }
 
 /**

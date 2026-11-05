@@ -16,7 +16,7 @@ const MAX_ERROR_REPORT = 8192;
  * this text; only the launcher prints it, after restoring the terminal.
  */
 function guestErrorText(text: string): string {
-	// biome-ignore lint/suspicious/noControlCharactersInRegex: the report keeps only newlines and tabs.
+	// oxlint-disable-next-line eslint/no-control-regex -- the report keeps only newlines and tabs.
 	const clean = text.replace(/[\x00-\x08\x0b-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]/g, "");
 	return clean.length > MAX_ERROR_REPORT ? `${clean.slice(0, MAX_ERROR_REPORT)}\n(truncated)` : clean;
 }

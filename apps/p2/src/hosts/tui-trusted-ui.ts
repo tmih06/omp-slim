@@ -26,7 +26,7 @@ type Output = { write(data: string): void; readonly columns: number; readonly ro
 
 /** Every control character becomes a visible symbol (␛, ␇, …), so data can never act on the terminal. */
 export function visibleText(text: string): string {
-	// biome-ignore lint/suspicious/noControlCharactersInRegex: making control characters visible.
+	// oxlint-disable-next-line eslint/no-control-regex -- making control characters visible.
 	return text.replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g, (char) => {
 		const code = char.charCodeAt(0);
 		return code < 0x20 ? String.fromCharCode(0x2400 + code) : code === 0x7f ? "\u2421" : "\ufffd";
@@ -195,7 +195,7 @@ export class TrustedUi {
 		}
 		if (current.kind === "notice") {
 			// Pointer movement, wheel and releases do not end it; a key or a click does.
-			// biome-ignore lint/suspicious/noControlCharactersInRegex: SGR mouse reports.
+			// oxlint-disable-next-line eslint/no-control-regex -- SGR mouse reports.
 			const mouse = /^\x1b\[<(\d+);\d+;\d+([Mm])$/.exec(data);
 			if (!mouse || (mouse[2] === "M" && (Number(mouse[1]) & 96) === 0)) this.close();
 			return;

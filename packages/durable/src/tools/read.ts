@@ -77,7 +77,7 @@ async function readHead(
 	const decoder = rangeDecoder();
 	let text = "";
 	let newlines = 0;
-	for (let position = skipBom && start === 0 ? 3 : start; position < end; ) {
+	for (let position = skipBom && start === 0 ? 3 : start; position < end;) {
 		const bytes = getOrThrow(await reader.read(position, Math.min(READ_CHUNK, end - position), context));
 		if (bytes.length === 0) break;
 		position += bytes.length;

@@ -165,16 +165,14 @@ describe("Models with classifier models", () => {
 
 	it("rejects images for classifier models without image input before calling the provider", async () => {
 		const classifier = classifierModel("test", "text-only");
-		const classify = vi.fn(
-			async (): Promise<ClassifierResult> => ({
-				api: classifier.api,
-				provider: classifier.provider,
-				model: classifier.id,
-				answers: {},
-				stopReason: "stop",
-				timestamp: Date.now(),
-			}),
-		);
+		const classify = vi.fn(async (): Promise<ClassifierResult> => ({
+			api: classifier.api,
+			provider: classifier.provider,
+			model: classifier.id,
+			answers: {},
+			stopReason: "stop",
+			timestamp: Date.now(),
+		}));
 		const models = createModels();
 		models.setProvider(
 			createProvider({

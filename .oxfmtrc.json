@@ -1,0 +1,21 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"tabWidth": 3,
+	"printWidth": 120,
+	"trailingComma": "all",
+	"sortImports": false,
+	"sortPackageJson": false,
+	"ignorePatterns": [
+		"**/node_modules/**",
+		"**/dist/**",
+		"**/models.generated.ts",
+		"**/*.models.ts",
+		"**/test-sessions.ts",
+		"packages/ai/src/providers/data/**",
+		"packages/coding-agent/schemas/**",
+		"**/package-lock.json",
+		"bun.lock",
+		"apps/**"
+	]
+}

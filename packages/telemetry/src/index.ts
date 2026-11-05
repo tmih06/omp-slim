@@ -198,21 +198,21 @@ type AttributeDefinitionValue<Definition extends TelemetryAttributeDefinition> =
 						: Definition extends {
 									type: "string[]";
 									elementValues: readonly (infer Value extends string)[];
-								}
+							  }
 							? readonly Value[]
 							: Definition extends { type: "string[]" }
 								? readonly string[]
 								: Definition extends {
 											type: "number[]";
 											elementValues: readonly (infer Value extends number)[];
-										}
+									  }
 									? readonly Value[]
 									: Definition extends { type: "number[]" }
 										? readonly number[]
 										: Definition extends {
 													type: "boolean[]";
 													elementValues: readonly (infer Value extends boolean)[];
-												}
+											  }
 											? readonly Value[]
 											: readonly boolean[];
 
@@ -277,12 +277,10 @@ export type TelemetrySchemaSpanEndAttributes<
 	? InferOptionalAttributes<Definitions>
 	: never;
 
-type SchemaSpanEvents<
-	Schema extends TelemetrySchemaDefinition,
-	Name extends TelemetrySchemaSpanName<Schema>,
-> = SchemaSpan<Schema, Name> extends { events: infer Events extends Record<string, TelemetryEventDefinition> }
-	? Events
-	: Record<never, never>;
+type SchemaSpanEvents<Schema extends TelemetrySchemaDefinition, Name extends TelemetrySchemaSpanName<Schema>> =
+	SchemaSpan<Schema, Name> extends { events: infer Events extends Record<string, TelemetryEventDefinition> }
+		? Events
+		: Record<never, never>;
 
 export type TelemetrySchemaSpanEventName<
 	Schema extends TelemetrySchemaDefinition,
@@ -293,31 +291,34 @@ type SchemaSpanEvent<
 	Schema extends TelemetrySchemaDefinition,
 	Name extends TelemetrySchemaSpanName<Schema>,
 	EventName extends TelemetrySchemaSpanEventName<Schema, Name>,
-> = SchemaSpanEvents<Schema, Name> extends infer Events
-	? EventName extends keyof Events
-		? Events[EventName]
-		: never
-	: never;
+> =
+	SchemaSpanEvents<Schema, Name> extends infer Events
+		? EventName extends keyof Events
+			? Events[EventName]
+			: never
+		: never;
 
 export type TelemetrySchemaSpanEventAttributes<
 	Schema extends TelemetrySchemaDefinition,
 	Name extends TelemetrySchemaSpanName<Schema>,
 	EventName extends TelemetrySchemaSpanEventName<Schema, Name>,
-> = SchemaSpanEvent<Schema, Name, EventName> extends {
-	attributes: infer Definitions extends Record<string, TelemetryEventAttributeDefinition>;
-}
-	? InferEventAttributes<Definitions>
-	: never;
+> =
+	SchemaSpanEvent<Schema, Name, EventName> extends {
+		attributes: infer Definitions extends Record<string, TelemetryEventAttributeDefinition>;
+	}
+		? InferEventAttributes<Definitions>
+		: never;
 
 type SchemaSpanEventAttributeDefinitions<
 	Schema extends TelemetrySchemaDefinition,
 	Name extends TelemetrySchemaSpanName<Schema>,
 	EventName extends TelemetrySchemaSpanEventName<Schema, Name>,
-> = SchemaSpanEvent<Schema, Name, EventName> extends {
-	attributes: infer Definitions extends Record<string, TelemetryEventAttributeDefinition>;
-}
-	? Definitions
-	: Record<never, never>;
+> =
+	SchemaSpanEvent<Schema, Name, EventName> extends {
+		attributes: infer Definitions extends Record<string, TelemetryEventAttributeDefinition>;
+	}
+		? Definitions
+		: Record<never, never>;
 
 type EventArguments<
 	Definitions extends Record<string, TelemetryEventAttributeDefinition>,
@@ -332,9 +333,8 @@ export type SchemaTelemetrySpan<
 > = Omit<TelemetrySpan, "addEvent" | "setAttributes"> & {
 	addEvent<
 		EventName extends TelemetrySchemaSpanEventName<Schema, Name>,
-		const Attributes extends InferEventAttributes<
-			SchemaSpanEventAttributeDefinitions<Schema, Name, EventName>
-		> = InferEventAttributes<SchemaSpanEventAttributeDefinitions<Schema, Name, EventName>>,
+		const Attributes extends InferEventAttributes<SchemaSpanEventAttributeDefinitions<Schema, Name, EventName>> =
+			InferEventAttributes<SchemaSpanEventAttributeDefinitions<Schema, Name, EventName>>,
 	>(
 		name: EventName,
 		...args: EventArguments<SchemaSpanEventAttributeDefinitions<Schema, Name, EventName>, Attributes>

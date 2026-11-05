@@ -56,9 +56,9 @@ test("terminal output admits only bounded complete allowed sequences", () => {
 		}
 		const result = filterTerminalOutput(input);
 		assert.equal(filterTerminalOutput(result), result);
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: assert hostile controls were stripped.
+		// oxlint-disable-next-line eslint/no-control-regex -- assert hostile controls were stripped.
 		assert(!/[\u0000-\u0008\u000b\u000c\u000e-\u001a\u001c-\u001f\u007f-\u009f]/.test(result));
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: enumerate surviving CSI sequences.
+		// oxlint-disable-next-line eslint/no-control-regex -- enumerate surviving CSI sequences.
 		assert(!result.replace(/\x1b\[[\d;:?]*[A-Za-z]/g, "").includes("\x1b"));
 	}
 });

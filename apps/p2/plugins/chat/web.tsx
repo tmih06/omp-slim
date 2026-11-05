@@ -279,6 +279,7 @@ function Composer({
 		element.style.overflowY = "hidden";
 		element.style.height = `${Math.min(element.scrollHeight + 1, 200)}px`;
 		element.style.overflowY = element.scrollHeight > element.clientHeight ? "auto" : "hidden";
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by explicit lifecycle inputs, not recreated callbacks or objects.
 	}, [draft]);
 	const files = attaching?.files ?? [];
 	const content = draft.trim() !== "" || files.length > 0;

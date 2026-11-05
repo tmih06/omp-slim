@@ -84,7 +84,7 @@ function tailRange(bytes: Uint8Array, limits: OutputLimits): [number, number] {
 	const last = bytes[bytes.length - 1] === NEWLINE ? bytes.length - 2 : bytes.length - 1;
 	let start = 0;
 	let lines = 1;
-	for (let index = last < 0 ? -1 : bytes.lastIndexOf(NEWLINE, last); index !== -1; ) {
+	for (let index = last < 0 ? -1 : bytes.lastIndexOf(NEWLINE, last); index !== -1;) {
 		if (lines === limits.maxLines) {
 			start = index + 1;
 			break;

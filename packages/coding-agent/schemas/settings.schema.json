@@ -215,7 +215,7 @@
     "showCacheMissNotices": {
       "type": "boolean",
       "description": "Show cache cost and provider recovery notices.",
-      "default": false
+      "default": true
     },
     "externalEditor": {
       "type": "string",

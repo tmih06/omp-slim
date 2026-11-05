@@ -33,7 +33,7 @@ export class TerminalModes {
 	/** Filters one worker frame and records every private mode it changes. */
 	filter(data: string): string {
 		const output = filterTerminalOutput(data, this.allowed);
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: private mode sequences.
+		// oxlint-disable-next-line eslint/no-control-regex -- private mode sequences.
 		for (const match of output.matchAll(/\x1b\[\?(\d+)([hl])/g)) this.state.set(match[1]!, match[2] as "h" | "l");
 		return output;
 	}

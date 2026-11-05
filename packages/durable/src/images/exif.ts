@@ -29,7 +29,7 @@ export function exifOrientation(bytes: Uint8Array): number {
 /** Where the TIFF header of a JPEG's APP1 or a WebP's EXIF chunk starts; -1 when there is none. */
 function tiffStart(bytes: Uint8Array): number {
 	if (bytes[0] === 0xff && bytes[1] === 0xd8) {
-		for (let offset = 2; offset + 4 <= bytes.length; ) {
+		for (let offset = 2; offset + 4 <= bytes.length;) {
 			if (bytes[offset] !== 0xff) return -1;
 			const marker = bytes[offset + 1]!;
 			if (marker === 0xff) {
@@ -42,7 +42,7 @@ function tiffStart(bytes: Uint8Array): number {
 		return -1;
 	}
 	if (ascii(bytes, 0, "RIFF") && ascii(bytes, 8, "WEBP")) {
-		for (let offset = 12; offset + 8 <= bytes.length; ) {
+		for (let offset = 12; offset + 8 <= bytes.length;) {
 			const size =
 				(bytes[offset + 4]! |
 					(bytes[offset + 5]! << 8) |

@@ -693,7 +693,7 @@ export class RemoteExecutionEnv implements ExecutionEnv {
 			const { handle } = await this.#openDir(resolved);
 			const entries: RemoteDirEntry[] = [];
 			try {
-				for (let done = false; !done; ) {
+				for (let done = false; !done;) {
 					const { json } = await handle.request("readdir", { max: 1000 });
 					entries.push(...(json.entries as RemoteDirEntry[]));
 					done = json.done === true;

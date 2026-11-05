@@ -189,7 +189,7 @@ export class FileSystemSyncRemote implements SessionSyncMaintenance {
 		const reader = unwrap(opened);
 		return (async function* () {
 			try {
-				for (let offset = 0; ; ) {
+				for (let offset = 0; ;) {
 					const chunk = unwrap(await reader.read(offset, READ_CHUNK, context));
 					if (chunk.length === 0) return;
 					offset += chunk.length;

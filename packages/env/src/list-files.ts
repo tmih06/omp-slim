@@ -58,7 +58,7 @@ export async function listFilesOver(
 		// Records of a kind byte, the UTF-8 path, and a NUL.
 		const entries: FileListEntry[] = [];
 		const bytes = Buffer.from(payload.buffer, payload.byteOffset, payload.length);
-		for (let start = 0; start < bytes.length; ) {
+		for (let start = 0; start < bytes.length;) {
 			const end = bytes.indexOf(0, start);
 			if (end === -1) break;
 			const kind = KINDS[bytes[start]!];

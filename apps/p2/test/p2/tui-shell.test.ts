@@ -127,6 +127,7 @@ test("`!` and `!!` run commands; the live one shows at the end; Escape cancels; 
 	assert.deepEqual(calls.shell?.[0], {
 		command: "ls -la",
 		includeInContext: true,
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		requestId: (calls.shell?.[0] as { requestId: string }).requestId,
 	});
 	await poll(async () => (await screen()).includes("$ ls -la") && (await screen()).includes("partial output"));
@@ -148,7 +149,9 @@ test("`!` and `!!` run commands; the live one shows at the end; Escape cancels; 
 	// `!!`: excluded from the context.
 	send(ENTER);
 	await poll(() => (calls.shell?.length ?? 0) === 2);
+	// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 	assert.equal((calls.shell?.[1] as { includeInContext: boolean }).includeInContext, false);
+	// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 	assert.equal((calls.shell?.[1] as { command: string }).command, "pwd");
 	await poll(() => chat.editor.getText() === "");
 });

@@ -478,6 +478,7 @@ describe("declarations", () => {
 		const Twice = local("app.twice", { version: 1, params: { n: int() }, members: {} });
 		const { host } = await loaded((h) =>
 			h.serve(Twice, (_, self) => {
+				// oxlint-disable-next-line eslint/no-unused-expressions -- This read exercises a getter or calls that must throw.
 				[self.state(List), self.state(List)];
 				return {};
 			}),

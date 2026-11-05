@@ -445,7 +445,7 @@ export class StreamableHttpTransport extends TransportEvents implements McpTrans
 		};
 		let stream: ReadableStream<Uint8Array> | undefined = body;
 		let failure: unknown;
-		for (let attempt = 0; ; ) {
+		for (let attempt = 0; ;) {
 			if (stream) {
 				try {
 					await this.consumeSse(stream, cursor, onMessage);
@@ -486,7 +486,7 @@ export class StreamableHttpTransport extends TransportEvents implements McpTrans
 	/** Keep the server-to-client stream open, reconnecting with backoff when it drops. */
 	private async runGetStream(): Promise<void> {
 		const cursor: StreamCursor = { lastEventId: undefined, retryMs: undefined, received: false };
-		for (let attempt = 0; !this.closed; ) {
+		for (let attempt = 0; !this.closed;) {
 			try {
 				const stream = await this.openSseStream(cursor.lastEventId);
 				// The server does not offer a GET stream.

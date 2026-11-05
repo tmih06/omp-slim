@@ -109,8 +109,10 @@ export interface CacheWarmingDecision {
  * Fired before each refresh with pi's decision filled in. Everything else an
  * extension might want (model, idle state, context size) is on the context.
  */
-export interface CacheWarmingDecisionEvent
-	extends Pick<CacheWarmingDecision, "warmCost" | "missCost" | "continuationProbability" | "action"> {
+export interface CacheWarmingDecisionEvent extends Pick<
+	CacheWarmingDecision,
+	"warmCost" | "missCost" | "continuationProbability" | "action"
+> {
 	type: "cache_warming_decision";
 }
 

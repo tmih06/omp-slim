@@ -209,9 +209,11 @@ describe("chat-mode on a bare session host", () => {
 		const mentions = (view: ConversationView | null | undefined) =>
 			(view?.entries ?? []).filter((entry) => entry.kind === "chat.mention");
 		const first = await until(owner.view, (view) => mentions(view).length === 1 && !live(view));
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		assert.deepEqual((mentions(first)[0]?.data as { included: number[] }).included, [], "composed before the chat");
 		await alice.send({ text: "@pi second", requestId: "m2" }, BACKGROUND_CONTEXT);
 		const second = await until(owner.view, (view) => mentions(view).length === 2);
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		assert.deepEqual((mentions(second)[1]?.data as { included: number[] }).included, [raced!.id]);
 		assert.match(JSON.stringify(mentions(second)[1]?.model), /Owner: raced/);
 	});
@@ -287,6 +289,7 @@ describe("chat-mode on a bare session host", () => {
 		// The client only names the entry; author and excerpt come from the entry itself.
 		await alice.send({ text: "split it", requestId: "2", replyTo: question!.id }, BACKGROUND_CONTEXT);
 		const reply = chatEntries(await until(owner.view, (view) => chatEntries(view).length === 2))[1];
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		assert.deepEqual((reply?.data as ChatMessage).replyTo, {
 			entryId: question!.id,
 			author: { kind: "owner", id: "owner", name: "Owner" },
@@ -322,6 +325,7 @@ describe("chat-mode on a bare session host", () => {
 		const answer = view?.entries.findLast((entry) => entry.model?.[0]?.role === "assistant");
 		await owner.send({ text: "thanks", requestId: "8", replyTo: answer!.id }, BACKGROUND_CONTEXT);
 		const thanks = chatEntries(await until(owner.view, (next) => chatEntries(next).length === 3))[2];
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		const quoted = (thanks?.data as ChatMessage).replyTo;
 		assert.deepEqual(quoted?.author, { kind: "agent", id: "agent", name: "Pi" });
 		assert.match(quoted?.excerpt ?? "", /^Echo: /);
@@ -329,6 +333,7 @@ describe("chat-mode on a bare session host", () => {
 		const input = view?.entries.find((entry) => entry.kind === "chat.mention");
 		await owner.send({ text: "re", requestId: "9", replyTo: input!.id }, BACKGROUND_CONTEXT);
 		const re = chatEntries(await until(owner.view, (next) => chatEntries(next).length === 4))[3];
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		assert.deepEqual((re?.data as ChatMessage).replyTo, {
 			entryId: input!.id,
 			author: { kind: "guest", id: "alice", name: "Alice" },

@@ -99,7 +99,7 @@ export function imageDimensions(
 			}
 			return undefined;
 		case "image/jpeg":
-			for (let offset = 2; offset + 9 <= bytes.length; ) {
+			for (let offset = 2; offset + 9 <= bytes.length;) {
 				if (bytes[offset] !== 0xff) return undefined;
 				const marker = bytes[offset + 1]!;
 				if (marker === 0xff) {

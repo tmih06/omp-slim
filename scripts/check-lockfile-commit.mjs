@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
+import { toNpmLockPackages } from "./bun-lock.mjs";
 
 const allowValue = process.env.PI_ALLOW_LOCKFILE_CHANGE;
 const allowed = allowValue === "1" || allowValue === "true" || allowValue === "yes";
@@ -11,7 +12,8 @@ function git(args) {
 
 function readJsonFromGit(ref) {
 	try {
-		return JSON.parse(git(["show", ref]));
+		const content = git(["show", ref]);
+		return ref.endsWith("bun.lock") ? { packages: toNpmLockPackages(Bun.JSONC.parse(content)) } : JSON.parse(content);
 	} catch {
 		return undefined;
 	}
@@ -31,8 +33,8 @@ function packageLabel(lockPath, entry) {
 }
 
 function getLockfilePackageChanges() {
-	const before = readJsonFromGit("HEAD:package-lock.json");
-	const after = readJsonFromGit(":package-lock.json");
+	const before = readJsonFromGit(`HEAD:${lockfile}`);
+	const after = readJsonFromGit(`:${lockfile}`);
 	if (!before?.packages || !after?.packages) return undefined;
 
 	const changes = [];
@@ -79,26 +81,28 @@ const stagedFiles = git(["diff", "--cached", "--name-only"])
 	.map((line) => line.trim())
 	.filter(Boolean);
 
-if (!stagedFiles.includes("package-lock.json")) {
+const lockfile = stagedFiles.includes("bun.lock") ? "bun.lock" : "package-lock.json";
+
+if (!stagedFiles.includes(lockfile)) {
 	process.exit(0);
 }
 
 if (allowed) {
-	console.error("package-lock.json is staged; PI_ALLOW_LOCKFILE_CHANGE is set, allowing commit.");
+	console.error(`${lockfile} is staged; PI_ALLOW_LOCKFILE_CHANGE is set, allowing commit.`);
 	process.exit(0);
 }
 
 const changes = getLockfilePackageChanges();
 if (changes && hasOnlyWorkspacePackageChanges(changes)) {
-	console.error("package-lock.json only updates workspace package metadata; allowing commit.");
+	console.error(`${lockfile} only updates workspace package metadata; allowing commit.`);
 	process.exit(0);
 }
 
-console.error("package-lock.json is staged.");
+console.error(`${lockfile} is staged.`);
 console.error("");
 console.error("Review lockfile changes before committing:");
 console.error("  - confirm every new/updated package is intentional");
-console.error("  - confirm npm age gates were active for resolution");
+console.error("  - confirm the Bun minimum-release-age gate was active for resolution");
 console.error("  - review any new lifecycle scripts in the dependency tree");
 console.error("  - regenerate/check coding-agent install lock if release deps changed");
 

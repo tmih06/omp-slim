@@ -2,7 +2,7 @@
 // (pi-tui scrolls and selects there), and the launcher recognizes, from the raw SGR reports alone, the release that
 // ends a selection gesture: a drag with the left button, or a double/triple click. Only that gesture copies.
 
-// biome-ignore lint/suspicious/noControlCharactersInRegex: SGR mouse reports.
+// oxlint-disable-next-line eslint/no-control-regex -- SGR mouse reports.
 const SGR_MOUSE = /\x1b\[<(\d+);(\d+);(\d+)([Mm])/g;
 const MULTI_CLICK_MS = 500;
 

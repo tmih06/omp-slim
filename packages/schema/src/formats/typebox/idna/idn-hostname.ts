@@ -54,7 +54,7 @@ function NormalizeHostname(value: string): string {
 		value
 			.replace(/[\uff01-\uff5e]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0)) // RE_FULLWIDTH_MAPPING
 			.normalize("NFC")
-			// biome-ignore lint/suspicious/noMisleadingCharacterClass: a set of single code points to remove (u flag), by design.
+			// oxlint-disable-next-line eslint/no-misleading-character-class -- a set of single code points to remove (u flag), by design.
 			.replace(/[\u00ad\u034f\u180b-\u180d\u200b\ufe00-\ufe0f\u{e0100}-\u{e01ef}]/gu, "") // RE_IGNORED_MAPPING
 			.replace(/[\u002E\u3002\uFF0E\uFF61]/g, ".")
 	); // RE_FULL_STOP_MAPPING

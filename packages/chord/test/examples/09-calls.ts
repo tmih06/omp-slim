@@ -54,6 +54,7 @@ const facet = defineFacet<P>((host) => {
 			slow: (ctx) =>
 				new Promise((resolve) =>
 					ctx.abortSignal?.addEventListener("abort", () => {
+						// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 						console.log("server: slow aborted:", (ctx.abortSignal?.reason as Error).message);
 						resolve(null);
 					}),

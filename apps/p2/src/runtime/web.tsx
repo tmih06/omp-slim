@@ -212,6 +212,7 @@ export function useObject<C extends Contract>(
 			stop();
 			if (ref) UI_LINGER.release(ref, type.name);
 		};
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by explicit lifecycle inputs, not recreated callbacks or objects.
 	}, [host, type, key]);
 	const ref = state.key === key ? state.ref : undefined;
 	if (variant !== undefined && (ref === undefined || statusOf(ref) !== "live" || ref.variant !== variant))

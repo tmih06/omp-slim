@@ -111,6 +111,7 @@ function expectAnthropicCacheMarkers(params: CapturedParams): void {
 	const instructionMessage = getInstructionMessage(params);
 	expect(instructionMessage).toBeDefined();
 	expect(Array.isArray(instructionMessage?.content)).toBe(true);
+	// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 	expect((instructionMessage?.content as TextPart[])[0]?.cache_control).toEqual({ type: "ephemeral" });
 
 	expect(params.tools).toHaveLength(1);

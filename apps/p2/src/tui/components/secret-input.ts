@@ -32,7 +32,7 @@ export class SecretInput implements Component, Focusable {
 	}
 	private add(text: string): void {
 		// One line of printable text; pasted line breaks and controls are dropped.
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: secrets never carry controls.
+		// oxlint-disable-next-line eslint/no-control-regex -- secrets never carry controls.
 		for (const char of text.replace(/[\x00-\x1f\x7f-\x9f]/g, "")) if (this.value.length < MAX) this.value.push(char);
 	}
 	handleInput(data: string): void {
@@ -59,7 +59,7 @@ export class SecretInput implements Component, Focusable {
 			this.clear();
 		else {
 			const printable =
-				// biome-ignore lint/suspicious/noControlCharactersInRegex: plain printable input only.
+				// oxlint-disable-next-line eslint/no-control-regex -- plain printable input only.
 				decodeKittyPrintable(data) ?? (data.length && !/[\x00-\x1f\x7f]/.test(data) ? data : undefined);
 			if (printable) this.add(printable);
 		}

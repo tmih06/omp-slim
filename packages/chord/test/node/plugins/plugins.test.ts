@@ -321,6 +321,7 @@ describe("rollout", () => {
 			built,
 			context,
 		);
+		// oxlint-disable-next-line eslint/no-unsafe-optional-chaining -- A missing result must fail this assertion rather than be defaulted.
 		expect([order, stopped.stopped?.step, (stopped.stopped?.error as Error).message]).toEqual([
 			["server"],
 			"server",

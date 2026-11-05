@@ -475,7 +475,7 @@ describe("NodeExecutionEnv text line reader", () => {
 		const reader = getOrThrow(await env.openTextLineReader("lines.txt", BACKGROUND_CONTEXT));
 		try {
 			const lines = [];
-			for (let line = getOrThrow(await reader.readLine(BACKGROUND_CONTEXT)); line !== undefined; ) {
+			for (let line = getOrThrow(await reader.readLine(BACKGROUND_CONTEXT)); line !== undefined;) {
 				lines.push(line);
 				line = getOrThrow(await reader.readLine(BACKGROUND_CONTEXT));
 			}

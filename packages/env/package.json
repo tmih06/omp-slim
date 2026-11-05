@@ -22,11 +22,11 @@
 		"CHANGELOG.md"
 	],
 	"scripts": {
-		"clean": "node ../../scripts/package-files.mjs clean dist",
+		"clean": "bun ../../scripts/package-files.mjs clean dist",
 		"build": "tsc -p tsconfig.build.json",
 		"build:daemon": "cargo build --manifest-path daemon/Cargo.toml --locked",
 		"test": "vitest --run",
-		"prepublishOnly": "npm run clean && npm run build"
+		"prepublishOnly": "bun run clean && bun run build"
 	},
 	"keywords": [
 		"durable-execution",

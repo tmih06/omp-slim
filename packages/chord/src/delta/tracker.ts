@@ -1123,7 +1123,7 @@ function replacePieceRange(node: OverlayNode, index: number, remove: number, ins
 }
 
 function mergePieces(pieces: Piece[]): void {
-	for (let index = 1; index < pieces.length; ) {
+	for (let index = 1; index < pieces.length;) {
 		const left = pieces[index - 1]!;
 		const right = pieces[index]!;
 		const sameSource =
@@ -1859,7 +1859,7 @@ function buildDenseRegions(candidates: DenseCandidates): DenseRegion[] {
 	if (candidates.bits === undefined) return [];
 	const regions: DenseRegion[] = [];
 	const bits = candidates.bits;
-	for (let at = 0; at < bits.length; ) {
+	for (let at = 0; at < bits.length;) {
 		while (at < bits.length && bits[at] === 0) at += 1;
 		if (at === bits.length) break;
 		const start = at;
@@ -2008,7 +2008,7 @@ function elementArrayPlan(baseLength: number, pieces: readonly Piece[]): ArrayPl
 		}
 	}
 	const removeRuns: number[] = [];
-	for (let end = baseLength; end > 0; ) {
+	for (let end = baseLength; end > 0;) {
 		if (retained[end - 1] !== 0) {
 			end -= 1;
 			continue;
@@ -2032,7 +2032,7 @@ function elementArrayPlan(baseLength: number, pieces: readonly Piece[]): ArrayPl
 function insertRunsOf(pieces: readonly Piece[]): number[] {
 	const insertRuns: number[] = [];
 	let logicalIndex = 0;
-	for (let pieceIndex = 0; pieceIndex < pieces.length; ) {
+	for (let pieceIndex = 0; pieceIndex < pieces.length;) {
 		const piece = pieces[pieceIndex]!;
 		if (piece.kind === "base") {
 			logicalIndex += piece.length;

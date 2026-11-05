@@ -497,6 +497,7 @@ describe("observeDoc detached during a commit", () => {
 		const { session, conversationId, recreate } = await retiring();
 		const changes: WatchCall<Readonly<Counter>>[] = [];
 		const ends: unknown[] = [];
+		// oxlint-disable-next-line eslint/prefer-const -- Separate declaration keeps callback types explicit during initialization.
 		let observation: Observation<Readonly<Counter>> | undefined;
 		observation = await session.observeDoc(
 			ConversationCounter,

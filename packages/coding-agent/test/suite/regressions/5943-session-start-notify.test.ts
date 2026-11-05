@@ -419,6 +419,7 @@ describe("regression #5943: session_start transient UI", () => {
 	it("refreshes hideThinkingBlock before rebuilding chat during reload", async () => {
 		initTheme("dark", false);
 		const events: string[] = [];
+		// oxlint-disable-next-line eslint/prefer-const -- Separate declaration keeps callback types explicit during initialization.
 		let context: ReloadCommandContext;
 		context = createReloadCommandContext({
 			settingsManager: { getHideThinkingBlock: () => true },

@@ -287,6 +287,7 @@ export function WorkspacePanel({
 		for (let index = 1; index <= segments.length; index++) next.add(segments.slice(0, index).join("/"));
 		setExpandedState(next);
 		// Only when the conversation changes: later folder changes come from the tree itself.
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by explicit lifecycle inputs, not recreated callbacks or objects.
 	}, [folderKey]);
 	const setExpanded = (next: ReadonlySet<string>) => {
 		setExpandedState(next);
@@ -399,6 +400,7 @@ export function WorkspacePanel({
 	const load = useCallback(
 		<T,>(key: string, request: () => Promise<T>, set: Dispatch<SetStateAction<Loaded<T>>>) => {
 			let current = true;
+			// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by the explicit lifecycle inputs, not recreated callbacks or objects.
 			const cached = attached ? (results.get(scoped(key)) as T | undefined) : undefined;
 			if (cached !== undefined && results.fresh(scoped(key))) {
 				set({ key, value: cached, loading: false });
@@ -420,6 +422,7 @@ export function WorkspacePanel({
 				current = false;
 			};
 		},
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by the explicit lifecycle inputs, not recreated callbacks or objects.
 		[attached, sessionId, conversationId],
 	);
 	/** Start loading what a tap opens, together with its navigation step. */
@@ -577,6 +580,7 @@ export function WorkspacePanel({
 				}),
 			setFile,
 		);
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by explicit lifecycle inputs, not recreated callbacks or objects.
 	}, [load, query, selection?.path, at, needsFile, version]);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: keyed by the selected path, not the selection object; version triggers refetches.
 	useEffect(() => {
@@ -592,6 +596,7 @@ export function WorkspacePanel({
 				}),
 			setDiff,
 		);
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by explicit lifecycle inputs, not recreated callbacks or objects.
 	}, [load, query, selection?.path, at, diffMode, contextLines, version]);
 	// biome-ignore lint/correctness/useExhaustiveDependencies: version triggers refetches.
 	useEffect(() => {

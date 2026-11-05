@@ -3,12 +3,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { toNpmLockPackages } from "./bun-lock.mjs";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, "..");
 const codingAgentDir = join(repoRoot, "packages/coding-agent");
 const outputDir = join(codingAgentDir, "install-lock");
-const rootLockfilePath = join(repoRoot, "package-lock.json");
+const rootLockfilePath = join(repoRoot, "bun.lock");
 const outputPackageJsonPath = join(outputDir, "package.json");
 const outputLockfilePath = join(outputDir, "package-lock.json");
 const internalPackagePrefix = "@earendil-works/pi-";
@@ -230,7 +231,21 @@ function addExternalPackage(lockPackages, installLockPackages, addedPaths, queue
 	}
 
 	const entry = lockPackages[sourceLockPath];
-	installLockPackages[outputLockPath] = copyLockEntry(entry);
+	// Bun omits lifecycle-script metadata. Inspect the installed, locked package before
+	// including it so the existing installer allowlist remains enforced.
+	const installed = readJson(join(repoRoot, sourceLockPath, "package.json"));
+	if (installed.version !== entry.version) {
+		throw new Error(
+			`${sourceLockPath} is not at its locked version; run bun install --frozen-lockfile --ignore-scripts`,
+		);
+	}
+	const hasInstallScript = ["preinstall", "install", "postinstall"].some((name) => installed.scripts?.[name]);
+	installLockPackages[outputLockPath] = copyLockEntry({
+		...entry,
+		license: installed.license,
+		engines: installed.engines,
+		...(hasInstallScript ? { hasInstallScript: true } : {}),
+	});
 	addedPaths.add(outputLockPath);
 
 	for (const dependencyName of Object.keys(packageDependencies(entry))) {
@@ -314,7 +329,9 @@ function validateGeneratedFiles(installerPackageJson, installLock, internalNames
 			(packageName.startsWith(internalPackagePrefix) || internalPackageNames.has(packageName)) &&
 			entry.version !== installerPackageJson.version
 		) {
-			errors.push(`${lockPath} internal package version ${entry.version} does not match ${installerPackageJson.version}`);
+			errors.push(
+				`${lockPath} internal package version ${entry.version} does not match ${installerPackageJson.version}`,
+			);
 		}
 		if (entry.hasInstallScript) {
 			if (!packageName || !entry.version) {
@@ -364,17 +381,15 @@ function validateGeneratedFiles(installerPackageJson, installLock, internalNames
 	}
 
 	if (errors.length > 0) {
-		throw new Error(`Generated installer lock failed validation:\n${errors.map((error) => `  - ${error}`).join("\n")}`);
+		throw new Error(
+			`Generated installer lock failed validation:\n${errors.map((error) => `  - ${error}`).join("\n")}`,
+		);
 	}
 }
 
 function generateInstallLock() {
-	const rootLock = readJson(rootLockfilePath);
-	if (rootLock.lockfileVersion !== 3 || !rootLock.packages) {
-		throw new Error("package-lock.json must be lockfileVersion 3 and contain a packages map");
-	}
-
-	const lockPackages = rootLock.packages;
+	const rootLock = Bun.JSONC.parse(readFileSync(rootLockfilePath, "utf8"));
+	const lockPackages = toNpmLockPackages(rootLock);
 	const codingAgentPackage = readJson(join(codingAgentDir, "package.json"));
 	const installerPackageJson = createInstallerPackageJson(codingAgentPackage);
 	const internalWorkspaces = getInternalWorkspaces(lockPackages);
@@ -427,14 +442,14 @@ try {
 	if (checkOnly) {
 		if (!existsSync(outputPackageJsonPath) || !existsSync(outputLockfilePath)) {
 			console.error("packages/coding-agent/install-lock is missing generated files.");
-			console.error("Run: npm run install-lock:coding-agent");
+			console.error("Run: bun run install-lock:coding-agent");
 			process.exit(1);
 		}
 		const currentPackageJson = readFileSync(outputPackageJsonPath, "utf8");
 		const currentLockfile = readFileSync(outputLockfilePath, "utf8");
 		if (currentPackageJson !== packageJsonContent || currentLockfile !== lockfileContent) {
 			console.error("packages/coding-agent/install-lock is out of date.");
-			console.error("Run: npm run install-lock:coding-agent");
+			console.error("Run: bun run install-lock:coding-agent");
 			process.exit(1);
 		}
 		console.log("packages/coding-agent/install-lock is up to date.");
@@ -443,8 +458,9 @@ try {
 		writeFileSync(outputPackageJsonPath, packageJsonContent);
 		writeFileSync(outputLockfilePath, lockfileContent);
 		const packageCount = Object.keys(installLock.packages).length - 1;
-		const platformPackageCount = Object.values(installLock.packages).filter((entry) => entry.os || entry.cpu || entry.libc)
-			.length;
+		const platformPackageCount = Object.values(installLock.packages).filter(
+			(entry) => entry.os || entry.cpu || entry.libc,
+		).length;
 		console.log(
 			`Wrote packages/coding-agent/install-lock/package.json and package-lock.json (${packageCount} packages, ${platformPackageCount} platform-specific).`,
 		);

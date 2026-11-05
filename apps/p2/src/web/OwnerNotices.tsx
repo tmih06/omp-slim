@@ -48,6 +48,7 @@ function NoticeCard({
 		if (notice.tone !== "success") return;
 		const timer = setTimeout(() => dismiss(notice), 5000);
 		return () => clearTimeout(timer);
+		// oxlint-disable-next-line react-hooks/exhaustive-deps -- This effect is keyed by explicit lifecycle inputs, not recreated callbacks or objects.
 	}, [notice.id, notice.tone, dismiss]);
 	const label = notice.details ? (
 		<button

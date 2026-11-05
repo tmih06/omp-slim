@@ -143,7 +143,7 @@ export function editorArgv(command: string | undefined): string[] | undefined {
 /** A local file name from a server-supplied one: base name only, no controls, separators or leading dots. */
 export function safeFileName(value: string | undefined): string {
 	const name = basename((value ?? "").replace(/\\/g, "/"))
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: file names never carry controls.
+		// oxlint-disable-next-line eslint/no-control-regex -- file names never carry controls.
 		.replace(/[\x00-\x1f\x7f-\x9f/:*?"<>|]/g, "_")
 		.replace(/^[.\s]+/, "")
 		.trim();
@@ -445,7 +445,7 @@ export function launcherActions(options: LauncherActionOptions): Record<string, 
 					return;
 				}
 				const text = await reader.text();
-				// biome-ignore lint/suspicious/noControlCharactersInRegex: pasted text keeps only newlines and tabs.
+				// oxlint-disable-next-line eslint/no-control-regex -- pasted text keeps only newlines and tabs.
 				const clean = text?.replace(/[\x00-\x08\x0b-\x1f\x7f-\x9f]/g, "");
 				if (clean) context.sendInput(`\x1b[200~${clean}\x1b[201~`);
 			},

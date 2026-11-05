@@ -12,7 +12,7 @@ export interface RenderContext {
 }
 
 /** Server/provider text must not carry terminal control sequences (cursor moves, OSC clipboard, ...). */
-// biome-ignore lint/suspicious/noControlCharactersInRegex: deliberately strip untrusted terminal controls.
+// oxlint-disable-next-line eslint/no-control-regex -- deliberately strip untrusted terminal controls.
 export const safeText = (text: string): string => stripTerminalSequences(text).replace(/[\x00-\x08\x0b-\x1f\x7f]/g, "");
 /** One line of server text. */
 export const lineText = (text: string): string => safeText(text).replace(/[\r\n\t]+/g, " ");
