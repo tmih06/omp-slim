@@ -1,5 +1,6 @@
 import { openAICompletionsApi } from "../api/openai-completions.lazy.ts";
-import { envApiKeyAuth } from "../auth/helpers.ts";
+import { envApiKeyAuth, lazyOAuth } from "../auth/helpers.ts";
+import { loadKiloOAuth } from "../auth/oauth/load.ts";
 import { createProvider, type Provider } from "../models.ts";
 import { KILO_MODELS } from "./kilo.models.ts";
 
@@ -8,7 +9,15 @@ export function kiloProvider(): Provider<"openai-completions"> {
 		id: "kilo",
 		name: "Kilo Gateway",
 		baseUrl: "https://api.kilo.ai/api/gateway",
-		auth: { apiKey: envApiKeyAuth("Kilo Gateway API key", ["KILO_API_KEY"]) },
+		auth: {
+			apiKey: envApiKeyAuth("Kilo Gateway API key", ["KILO_API_KEY"]),
+			oauth: lazyOAuth({
+				name: "Kilo Gateway",
+				isSubscription: true,
+				loginLabel: "Sign in with Kilo",
+				load: loadKiloOAuth,
+			}),
+		},
 		models: Object.values(KILO_MODELS),
 		api: openAICompletionsApi(),
 	});
