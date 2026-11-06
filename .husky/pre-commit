@@ -8,9 +8,10 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Run the check script (formatting, linting, and type checking)
-echo "Running formatting, linting, and type checking..."
-bun run check
+# Scope the checks to what changed, and skip steps whose inputs already passed. The commit is still
+# fully validated: see scripts/impacted.mjs for why an unrecognized path runs everything.
+echo "Running checks for the affected packages..."
+bun run check:affected
 if [ $? -ne 0 ]; then
   echo "❌ Checks failed. Please fix the errors before committing."
   exit 1

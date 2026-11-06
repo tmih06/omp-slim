@@ -31,10 +31,27 @@ jobs:
         with:
           bun-version: 1.4.4
 
+      - name: Cache Bun packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
+      # `dist` is a pure function of the sources and the lockfile, so key it on those rather than the
+      # commit: a docs-only push then reuses the previous build instead of recompiling 12 packages.
+      - name: Restore build output
+        id: build-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: packages/*/dist
+          key: dist-${{ runner.os }}-${{ hashFiles('bun.lock', 'packages/*/src/**', 'packages/*/tsconfig*.json', 'tsconfig*.json', 'scripts/build-*.mjs') }}
+
       - name: Build
+        if: steps.build-cache.outputs.cache-hit != 'true'
         run: bun run build
 
       - name: Pack preview packages
@@ -52,8 +69,16 @@ jobs:
           retention-days: 3
           if-no-files-found: error
 
+      # Same steps as `bun run check`, with two differences: the memo skips a step whose inputs are
+      # byte-identical to a previous green run, and the type check is scoped to affected packages.
+      # `--all` is not used here, so an unrecognized change (root config, workflow, script) falls back
+      # to checking everything rather than nothing.
       - name: Check
-        run: bun run check
+        env:
+          # Without a base the scope is the working tree, which is empty in CI. The workflow's own
+          # diff is the real change set.
+          IMPACT_BASE: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+        run: node scripts/run-check.mjs --base "$IMPACT_BASE"
 
   test:
     name: test (${{ matrix.name }})
@@ -86,27 +111,72 @@ jobs:
           sudo apt-get install -y --no-install-recommends fd-find ripgrep
           sudo ln -s $(which fdfind) /usr/local/bin/fd
 
+      - name: Cache Bun packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
+      # `dist` is a pure function of the sources and the lockfile, so key it on those rather than the
+      # commit: a docs-only push then reuses the previous build instead of recompiling 12 packages.
+      - name: Restore build output
+        id: build-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: packages/*/dist
+          key: dist-${{ runner.os }}-${{ hashFiles('bun.lock', 'packages/*/src/**', 'packages/*/tsconfig*.json', 'tsconfig*.json', 'scripts/build-*.mjs') }}
+
       - name: Build
+        if: steps.build-cache.outputs.cache-hit != 'true'
         run: bun run build
 
       - name: Build the pi-env daemon
         if: matrix.name == 'other'
         run: bun run --cwd packages/env build:daemon
 
+      # Only the packages this change can reach. `scripts/impacted.mjs` walks the workspace
+      # dependency graph, and treats any path it cannot attribute to a package as "run everything",
+      # so a change to a root config or a shared script is never silently skipped.
+      - name: Decide affected packages
+        id: affected
+        run: |
+          JSON=$(node scripts/impacted.mjs --json --base "${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}")
+          echo "scope=$JSON" >> "$GITHUB_OUTPUT"
+          echo "Affected: $JSON"
+
       - name: Test
         env:
           SUITE: ${{ matrix.name }}
+          SCOPE: ${{ steps.affected.outputs.scope }}
         run: |
+          AFFECTED=$(printf '%s' "$SCOPE" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{const j=JSON.parse(d);console.log(j.everything?"all":j.packages.join(" "))})')
+          echo "running for: $AFFECTED"
+
+          # A test job with nothing in scope still reports success, so a docs-only change does not
+          # hold a matrix leg for four minutes.
+          skip_if_unchanged() {
+            case " $AFFECTED " in
+              *" all "*) return 1 ;;
+              *" $1 "*) return 1 ;;
+              *) echo "no changes affecting $1"; return 0 ;;
+            esac
+          }
+
           if [ "$SUITE" != other ]; then
+            skip_if_unchanged "$SUITE" && exit 0
             bun run --cwd "packages/$SUITE" test
             exit 0
           fi
-          bun run test:scripts
+
+          skip_if_unchanged scripts && bun run test:scripts
           for dir in packages/*/; do
-            case "$dir" in packages/coding-agent/ | packages/durable/) continue ;; esac
+            name=$(basename "$dir")
+            case "$name" in coding-agent|durable) continue ;; esac
+            skip_if_unchanged "$name" && continue
             bun run --cwd "$dir" --if-present test
           done
 
@@ -120,6 +190,13 @@ jobs:
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.4
+
+      - name: Cache Bun packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
