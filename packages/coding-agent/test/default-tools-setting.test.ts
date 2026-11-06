@@ -8,7 +8,8 @@ import { createAgentSessionFromServices, createAgentSessionServices } from "../s
 import { DefaultResourceLoader } from "../src/core/resource-loader.ts";
 import { type CreateAgentSessionOptions, createAgentSession, type InlineExtension } from "../src/core/sdk.ts";
 import { SessionManager } from "../src/core/session-manager.ts";
-import { SettingsManager } from "../src/core/settings-manager.ts";
+import { DEFAULT_TOOL_NAMES, SettingsManager } from "../src/core/settings-manager.ts";
+import { allToolNames } from "../src/core/tools/index.ts";
 
 type ToolOptions = Pick<CreateAgentSessionOptions, "tools" | "excludeTools" | "noTools" | "customTools">;
 
@@ -58,7 +59,7 @@ describe("defaultTools setting", () => {
 	it("uses the configured list as the initial built-in selection", async () => {
 		const session = await createSession(["grep", "find"]);
 
-		expect(session.getAllTools().map((tool) => tool.name)).toContain("codemode");
+		expect(new Set(session.getAllTools().map((tool) => tool.name))).toEqual(allToolNames);
 		expect(session.getActiveToolNames()).toEqual(["grep", "find"]);
 		expect(session.systemPrompt).toContain("- grep:");
 		expect(session.systemPrompt).not.toContain("- read:");
@@ -88,16 +89,16 @@ describe("defaultTools setting", () => {
 			},
 		]);
 
-		expect(session.getActiveToolNames()).toEqual(expect.arrayContaining(["inactive_tool", "read"]));
-		expect(session.getActiveToolNames()).not.toContain("write");
+		expect(session.getActiveToolNames().sort()).toEqual(
+			[...DEFAULT_TOOL_NAMES.filter((name) => name !== "write"), "inactive_tool"].sort(),
+		);
 		session.dispose();
 	});
 
 	it("can disable the built-in codemode tool without disabling other default tools", async () => {
 		const session = await createSession(["-codemode"]);
-		expect(session.getAllTools().map((tool) => tool.name)).toContain("codemode");
-		expect(session.getActiveToolNames()).not.toContain("codemode");
-		expect(session.getActiveToolNames()).toContain("read");
+		expect(new Set(session.getAllTools().map((tool) => tool.name))).toEqual(allToolNames);
+		expect(session.getActiveToolNames()).toEqual(DEFAULT_TOOL_NAMES.filter((name) => name !== "codemode"));
 		session.dispose();
 	});
 
@@ -180,8 +181,9 @@ describe("defaultTools setting", () => {
 		};
 
 		const session = await createSession(["+grep"], { tools: ["+inactive_tool", "-write"] }, [inactiveTool]);
-		expect(session.getActiveToolNames()).toEqual(expect.arrayContaining(["active_tool", "grep", "inactive_tool"]));
-		expect(session.getActiveToolNames()).not.toContain("write");
+		expect(session.getActiveToolNames().sort()).toEqual(
+			[...DEFAULT_TOOL_NAMES.filter((name) => name !== "write"), "grep", "inactive_tool", "active_tool"].sort(),
+		);
 		session.dispose();
 
 		const toolLess = await createSession(["read"], { noTools: "all", tools: ["+inactive_tool"] }, [inactiveTool]);
@@ -281,8 +283,7 @@ describe("defaultTools setting", () => {
 			const excluded = await createFileSession({ excludeTools: ["grep"] });
 			writeSettings({ defaultTools: ["+grep", "+inactive_tool"] });
 			await excluded.reload();
-			expect(excluded.getActiveToolNames()).toContain("inactive_tool");
-			expect(excluded.getActiveToolNames()).not.toContain("grep");
+			expect(excluded.getActiveToolNames().sort()).toEqual([...DEFAULT_TOOL_NAMES, "inactive_tool"].sort());
 			excluded.dispose();
 		});
 	});
@@ -448,8 +449,7 @@ describe("defaultTools setting", () => {
 			const sessionManager = SessionManager.inMemory(tempDir);
 			sessionManager.appendMessage({ role: "user", content: "hi", timestamp: Date.now() });
 			const session = await resume(sessionManager);
-			expect(session.getActiveToolNames()).toEqual(expect.arrayContaining(["active_tool", "read", "codemode"]));
-			expect(session.getActiveToolNames()).not.toContain("inactive_tool");
+			expect(session.getActiveToolNames().sort()).toEqual([...DEFAULT_TOOL_NAMES, "active_tool"].sort());
 			session.dispose();
 		});
 	});
@@ -463,6 +463,7 @@ describe("defaultTools setting", () => {
 			model: getModel("anthropic", "claude-sonnet-4-5")!,
 		});
 
+		expect(new Set(session.getAllTools().map((tool) => tool.name))).toEqual(allToolNames);
 		expect(session.getActiveToolNames()).toEqual(["ls"]);
 		session.dispose();
 	});

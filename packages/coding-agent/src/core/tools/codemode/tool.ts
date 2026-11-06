@@ -38,21 +38,6 @@ import { codemodeRenderers } from "./renderer.ts";
 
 export const CODEMODE_TOOL_NAME = "codemode";
 
-/**
- * Read the `codemode` settings from a session's settings object. Named outside the definition so the
- * built-in tool resolves mode and budget per call, like the extension did.
- */
-export function readCodemodeSettings(settings: { codemode?: { mode?: string; inlineBudget?: unknown } }): {
-	mode: CodemodeMode;
-	inlineBudget: number | undefined;
-} {
-	const budget = settings.codemode?.inlineBudget;
-	return {
-		mode: settings.codemode?.mode === "only" ? "only" : SETTINGS_DEFAULTS.codemode.mode,
-		inlineBudget: typeof budget === "number" && Number.isFinite(budget) && budget >= 0 ? budget : undefined,
-	};
-}
-
 /** Custom entry type holding one script's `store()` writes: {@link CodemodeStoreEntryData}. */
 export const CODEMODE_STORE_ENTRY_TYPE = "codemode-store";
 

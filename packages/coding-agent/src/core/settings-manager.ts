@@ -12,6 +12,7 @@ import { DEFAULT_HTTP_IDLE_TIMEOUT_MS, parseHttpIdleTimeoutMs } from "./http-dis
 import { SETTINGS_DEFAULTS } from "./settings-defaults.ts";
 import type {
 	CacheWarmingMode,
+	CodemodeMode,
 	CompactionModelOverride,
 	DefaultProjectTrust,
 	FullscreenExitOutput,
@@ -1361,6 +1362,16 @@ export class SettingsManager {
 		const tools = this.settings.defaultTools;
 		if (tools === undefined) return undefined;
 		return resolveDefaultTools(Array.isArray(tools) ? tools.filter((tool) => typeof tool === "string") : []);
+	}
+
+	// Settings files are parsed without schema validation; normalize their codemode values here.
+	getCodemodeMode(): CodemodeMode {
+		return this.settings.codemode?.mode === "only" ? "only" : SETTINGS_DEFAULTS.codemode.mode;
+	}
+
+	getCodemodeInlineBudget(): number | undefined {
+		const budget: unknown = this.settings.codemode?.inlineBudget;
+		return typeof budget === "number" && Number.isFinite(budget) && budget >= 0 ? budget : undefined;
 	}
 
 	setEnabledModels(patterns: string[] | undefined): void {

@@ -19,8 +19,8 @@ import { writeRenderers } from "./write.ts";
 
 export type { ToolRenderers };
 
-export { codemodeRenderers } from "../codemode/renderer.ts";
 export {
+	codemodeRenderers,
 	createShellRenderers,
 	editRenderers,
 	findRenderers,
