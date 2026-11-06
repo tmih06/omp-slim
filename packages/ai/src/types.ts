@@ -130,7 +130,23 @@ export type KnownProvider =
 	| "xiaomi"
 	| "xiaomi-token-plan-cn"
 	| "xiaomi-token-plan-ams"
-	| "xiaomi-token-plan-sgp";
+	| "xiaomi-token-plan-sgp"
+	| "aiand"
+	| "aimlapi"
+	| "alibaba-coding-plan"
+	| "alibaba-token-plan"
+	| "cline-pass"
+	| "commandcode"
+	| "coralbricks"
+	| "deepinfra"
+	| "inception"
+	| "kilo"
+	| "modular"
+	| "ollama-cloud"
+	| "sambanova"
+	| "scaleway"
+	| "synthetic"
+	| "venice";
 export type ProviderId = KnownProvider | string;
 
 export type ToolChoice = "auto" | "none";

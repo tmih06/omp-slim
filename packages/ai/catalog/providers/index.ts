@@ -44,8 +44,40 @@ import xiaomiTokenPlanCn from "./xiaomi-token-plan-cn.ts";
 import xiaomiTokenPlanSgp from "./xiaomi-token-plan-sgp.ts";
 import zai from "./zai.ts";
 import zaiCodingCn from "./zai-coding-cn.ts";
+import aiand from "./aiand.ts";
+import aimlapi from "./aimlapi.ts";
+import alibabaCodingPlan from "./alibaba-coding-plan.ts";
+import alibabaTokenPlan from "./alibaba-token-plan.ts";
+import clinePass from "./cline-pass.ts";
+import commandcode from "./commandcode.ts";
+import coralbricks from "./coralbricks.ts";
+import deepinfra from "./deepinfra.ts";
+import inception from "./inception.ts";
+import kilo from "./kilo.ts";
+import modular from "./modular.ts";
+import ollamaCloud from "./ollama-cloud.ts";
+import sambanova from "./sambanova.ts";
+import scaleway from "./scaleway.ts";
+import synthetic from "./synthetic.ts";
+import venice from "./venice.ts";
 
 export const PROVIDERS: readonly ProviderDefinition[] = [
+	aiand,
+	aimlapi,
+	alibabaCodingPlan,
+	alibabaTokenPlan,
+	clinePass,
+	commandcode,
+	coralbricks,
+	deepinfra,
+	inception,
+	kilo,
+	modular,
+	ollamaCloud,
+	sambanova,
+	scaleway,
+	synthetic,
+	venice,
 	amazonBedrock,
 	antLing,
 	anthropic,
@@ -87,6 +119,22 @@ export const PROVIDERS: readonly ProviderDefinition[] = [
 	xiaomiTokenPlanCn,
 	xiaomiTokenPlanSgp,
 	xiaomi,
+	aiand,
+	aimlapi,
+	alibabaCodingPlan,
+	alibabaTokenPlan,
+	clinePass,
+	commandcode,
+	coralbricks,
+	deepinfra,
+	inception,
+	kilo,
+	modular,
+	ollamaCloud,
+	sambanova,
+	scaleway,
+	synthetic,
+	venice,
 	zaiCodingCn,
 	zai,
 ];

@@ -35,6 +35,22 @@ import { qwenTokenPlanCnProvider } from "./qwen-token-plan-cn.ts";
 import { qwenTokenPlanIndividualProvider } from "./qwen-token-plan-individual.ts";
 import { qwenTokenPlanIndividualCnProvider } from "./qwen-token-plan-individual-cn.ts";
 import { radiusProvider } from "./radius.ts";
+import { aiandProvider } from "./aiand.ts";
+import { aimlapiProvider } from "./aimlapi.ts";
+import { alibabaCodingPlanProvider } from "./alibaba-coding-plan.ts";
+import { alibabaTokenPlanProvider } from "./alibaba-token-plan.ts";
+import { clinePassProvider } from "./cline-pass.ts";
+import { commandcodeProvider } from "./commandcode.ts";
+import { coralbricksProvider } from "./coralbricks.ts";
+import { deepinfraProvider } from "./deepinfra.ts";
+import { inceptionProvider } from "./inception.ts";
+import { kiloProvider } from "./kilo.ts";
+import { modularProvider } from "./modular.ts";
+import { ollamaCloudProvider } from "./ollama-cloud.ts";
+import { sambanovaProvider } from "./sambanova.ts";
+import { scalewayProvider } from "./scaleway.ts";
+import { syntheticProvider } from "./synthetic.ts";
+import { veniceProvider } from "./venice.ts";
 import { togetherProvider } from "./together.ts";
 import { typesafeProvider } from "./typesafe.ts";
 import { vercelAIGatewayProvider } from "./vercel-ai-gateway.ts";
@@ -169,6 +185,22 @@ export function builtinProviders(): Provider[] {
 		qwenTokenPlanIndividualProvider(),
 		qwenTokenPlanIndividualCnProvider(),
 		radiusProvider(),
+		aiandProvider(),
+		aimlapiProvider(),
+		alibabaCodingPlanProvider(),
+		alibabaTokenPlanProvider(),
+		clinePassProvider(),
+		commandcodeProvider(),
+		coralbricksProvider(),
+		deepinfraProvider(),
+		inceptionProvider(),
+		kiloProvider(),
+		modularProvider(),
+		ollamaCloudProvider(),
+		sambanovaProvider(),
+		scalewayProvider(),
+		syntheticProvider(),
+		veniceProvider(),
 		togetherProvider(),
 		typesafeProvider(),
 		vercelAIGatewayProvider(),

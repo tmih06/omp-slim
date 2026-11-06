@@ -82,6 +82,22 @@ function getApiKeyEnvVars(provider: string): readonly string[] | undefined {
 	}
 
 	const envMap: Record<string, string> = {
+		aiand: "AIAND_API_KEY",
+		aimlapi: "AIMLAPI_API_KEY",
+		"alibaba-coding-plan": "ALIBABA_CODING_PLAN_API_KEY",
+		"alibaba-token-plan": "ALIBABA_TOKEN_PLAN_API_KEY",
+		"cline-pass": "CLINE_API_KEY",
+		commandcode: "CMD_API_KEY",
+		coralbricks: "CORAL_API_KEY",
+		deepinfra: "DEEPINFRA_API_KEY",
+		inception: "INCEPTION_API_KEY",
+		kilo: "KILO_API_KEY",
+		modular: "MODULAR_API_KEY",
+		"ollama-cloud": "OLLAMA_API_KEY",
+		sambanova: "SAMBANOVA_API_KEY",
+		scaleway: "SCALEWAY_API_KEY",
+		synthetic: "SYNTHETIC_API_KEY",
+		venice: "VENICE_API_KEY",
 		"ant-ling": "ANT_LING_API_KEY",
 		"qwen-token-plan": "QWEN_TOKEN_PLAN_API_KEY",
 		"qwen-token-plan-cn": "QWEN_TOKEN_PLAN_CN_API_KEY",
