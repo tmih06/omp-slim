@@ -3832,6 +3832,12 @@ export class InteractiveMode {
 				break;
 			}
 
+			case "account_rotation": {
+				this.showStatus(event.message);
+				this.ui.requestRender();
+				break;
+			}
+
 			case "auto_retry_start": {
 				// Set up escape to abort retry
 				this.retryEscapeHandler = this.defaultEditor.onEscape;

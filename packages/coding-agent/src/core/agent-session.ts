@@ -48,7 +48,9 @@ import type {
 import {
 	clampThinkingLevel,
 	cleanupSessionResources,
+	type CredentialAccountKey,
 	getSupportedThinkingLevels,
+	isAccountQuotaExhausted,
 	isContextOverflow,
 	isRecoverableLength,
 	isRetryableAssistantError,
@@ -233,6 +235,14 @@ export type AgentSessionEvent =
 			errorMessage?: string;
 	  }
 	| { type: "auto_retry_start"; attempt: number; maxAttempts: number; delayMs: number; errorMessage: string }
+	| {
+			type: "account_rotation";
+			providerId: string;
+			fromAccountKey: CredentialAccountKey;
+			toAccountKey: CredentialAccountKey;
+			reason: "quota";
+			message: string;
+	  }
 	| { type: "auto_retry_end"; success: boolean; attempt: number; finalError?: string }
 	| {
 			type: "summarization_retry_scheduled";
@@ -499,6 +509,8 @@ export class AgentSession {
 	private _extensionErrorUnsubscriber?: () => void;
 
 	private _modelRuntime: ModelRuntime;
+	/** `<provider>\u0000<accountKey>` for accounts that reported an exhausted quota in this session. */
+	private _exhaustedAccountKeys = new Set<string>();
 	private _cacheWarmer?: Pick<CacheWarmer, "cancel" | "status" | "onAgentSettled" | "onModeChanged" | "onWarmed">;
 
 	// Tool registry for extension getTools/setTools
@@ -3846,7 +3858,54 @@ export class AgentSession {
 	private _isRetryableError(message: AssistantMessage): boolean {
 		// Context overflow is handled by compaction, not retry.
 		if (isContextOverflow(message, (this._modelForMessage(message) ?? this.model)?.contextWindow ?? 0)) return false;
+		// An exhausted account is retried by switching accounts, not by waiting; see _prepareRetry.
+		if (isAccountQuotaExhausted(message)) return true;
 		return isRetryableAssistantError(message);
+	}
+
+	/**
+	 * Switch the provider to another stored account after `message` reported an exhausted quota.
+	 *
+	 * Returns true when a different account became active, in which case the caller retries
+	 * immediately: waiting cannot refill a quota, and the alternative is failing the run while an
+	 * account with quota sits unused. Accounts are recorded rather than merely skipped, so a second
+	 * exhaustion in the same run moves to the next sibling instead of oscillating between two.
+	 *
+	 * Only providers with several stored accounts are affected; a single-account provider returns
+	 * false and keeps the ordinary failure path.
+	 */
+	private async _rotateOnQuotaExhaustion(message: AssistantMessage): Promise<boolean> {
+		const model = this._modelForMessage(message) ?? this.model;
+		if (!model) return false;
+
+		const providerId = model.provider;
+		const accounts = await this._modelRuntime.listCredentialAccounts();
+		const siblings = accounts.filter((account) => account.providerId === providerId);
+		if (siblings.length < 2) return false;
+
+		const activeKey = siblings.find((account) => account.active)?.accountKey ?? null;
+		if (activeKey !== null) this._exhaustedAccountKeys.add(`${providerId}\u0000${activeKey}`);
+
+		const next = siblings.find(
+			(account) =>
+				account.accountKey !== activeKey &&
+				!this._exhaustedAccountKeys.has(`${providerId}\u0000${account.accountKey}`),
+		);
+		if (!next) return false;
+
+		const switched = await this._modelRuntime.selectCredentialAccount(providerId, next.accountKey);
+		if (!switched) return false;
+
+		const label = next.label ? `${next.accountKey} (${next.label})` : `${next.accountKey}`;
+		this._emit({
+			type: "account_rotation",
+			providerId,
+			fromAccountKey: activeKey,
+			toAccountKey: next.accountKey,
+			reason: "quota",
+			message: `Switched ${providerId} account to ${label}: the previous account is out of quota.`,
+		});
+		return true;
 	}
 
 	/**
@@ -3900,6 +3959,19 @@ export class AgentSession {
 		const settings = this.settingsManager.getRetrySettings();
 		if (!settings.enabled) {
 			return false;
+		}
+
+		// An exhausted account does not recover by waiting, so switch to a sibling account and retry
+		// once. This runs before the attempt budget so rotation does not consume a backoff retry.
+		if (isAccountQuotaExhausted(message)) {
+			// Waiting cannot refill a quota: retry only if another account took over. Otherwise fail
+			// now instead of spending the retry budget on attempts that must fail the same way.
+			if (!(await this._rotateOnQuotaExhaustion(message))) return false;
+			// The failed response is still in agent state. Without this the retried request would be
+			// rejected ("Cannot continue from message role: assistant") instead of re-sending the
+			// conversation to the new account.
+			this._omitRecoveryAttempt(message);
+			return true;
 		}
 
 		this._retryAttempt++;

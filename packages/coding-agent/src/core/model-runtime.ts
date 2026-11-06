@@ -110,9 +110,16 @@ interface ModelRuntimeSnapshot {
 }
 
 export interface CreateModelRuntimeOptions {
-	/** Credential storage. Defaults to the file at authPath. */
+	/** Credential storage. Defaults to the multi-account SQLite store in the agent directory. */
 	credentials?: CredentialStore;
+	/**
+	 * Legacy single-credential JSON path. Only for callers that deliberately pin file storage; the
+	 * application passes the agent directory through `agentDir` instead, so it gets multi-account
+	 * storage. Setting this uses the JSON store at that path.
+	 */
 	authPath?: string;
+	/** Agent directory holding `agent.db`; defaults to `getAgentDir()`. */
+	agentDir?: string;
 	modelsPath?: string | null;
 	modelsStore?: ModelsStore;
 	modelsStorePath?: string;
@@ -219,7 +226,8 @@ export class ModelRuntime implements Models {
 
 	static async create(options: CreateModelRuntimeOptions = {}): Promise<ModelRuntime> {
 		const credentials = new RuntimeCredentials(
-			options.credentials ?? (options.authPath ? AuthStorage.create(options.authPath) : createAuthStorage()),
+			options.credentials ??
+				(options.authPath ? AuthStorage.create(options.authPath) : createAuthStorage(options.agentDir)),
 		);
 		const modelsPath =
 			options.modelsPath === null ? undefined : (options.modelsPath ?? join(getAgentDir(), "models.json"));

@@ -273,3 +273,20 @@ export function isRetryableAssistantError(message: AssistantMessage): boolean {
 	if (NON_RETRYABLE_PROVIDER_LIMIT_ERROR_PATTERN.test(errorMessage)) return false;
 	return RETRYABLE_PROVIDER_ERROR_PATTERN.test(errorMessage);
 }
+
+/**
+ * Whether a failed response means the *account* is out of quota rather than the request being
+ * throttled or the provider failing.
+ *
+ * This is the complement of the retryable classification: these errors do not clear by waiting, so
+ * `isRetryableAssistantError` refuses to retry them, and the run fails on an account that is simply
+ * exhausted while another stored account still has quota. Callers that hold several accounts for a
+ * provider can rotate on this and retry once, which is the only recovery that can succeed.
+ *
+ * Transient throttling ("rate limit", HTTP 429 with no quota wording) is deliberately excluded: a
+ * sibling account would not help, and the existing backoff handles it.
+ */
+export function isAccountQuotaExhausted(message: AssistantMessage): boolean {
+	if (message.stopReason !== "error" || !message.errorMessage) return false;
+	return NON_RETRYABLE_PROVIDER_LIMIT_ERROR_PATTERN.test(message.errorMessage);
+}

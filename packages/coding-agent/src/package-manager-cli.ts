@@ -612,7 +612,7 @@ async function refreshModelCatalogs(agentDir: string): Promise<void> {
 	const timeout = setTimeout(() => controller.abort(), 15_000);
 	try {
 		const modelRuntime = await ModelRuntime.create({
-			authPath: join(agentDir, "auth.json"),
+			agentDir,
 			modelsPath: join(agentDir, "models.json"),
 			allowModelNetwork: false,
 			signal: controller.signal,
