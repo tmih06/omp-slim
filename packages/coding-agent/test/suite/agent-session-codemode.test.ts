@@ -500,7 +500,6 @@ describe("codemode options and store", () => {
 	async function setup() {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode"],
-			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		return harness;
@@ -611,7 +610,6 @@ describe("codemode options and store", () => {
 	it("resolves bash calls to structured results, also for non-zero exit codes", async () => {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode", "bash"],
-			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		const result = await run(
@@ -626,7 +624,6 @@ describe("codemode options and store", () => {
 	it("resolves read calls to text for text files and to image blocks that image() shows", async () => {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode", "read"],
-			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		writeFileSync(join(harness.tempDir, "notes.txt"), "hello");
@@ -753,7 +750,6 @@ describe("codemode models", () => {
 	async function setup() {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode"],
-			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		const observed: ClassifyObservation[] = [];

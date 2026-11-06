@@ -150,7 +150,7 @@ import {
 	normalizeBuildSystemPromptOptions,
 } from "./system-prompt.ts";
 import { type BashOperations, createLocalBashOperations } from "./tools/bash.ts";
-import { createAllToolDefinitions, readCodemodeSettings } from "./tools/index.ts";
+import { createAllToolDefinitions } from "./tools/index.ts";
 import { createToolDefinitionFromAgentTool } from "./tools/tool-definition-wrapper.ts";
 import { addUsageToTotals, combineUsage, createUsageTotals } from "./usage-totals.ts";
 import {
@@ -3770,8 +3770,8 @@ export class AgentSession {
 						models: true,
 						getToolNamespace: (name) => this._toolDefinitions.get(name)?.definition.namespace,
 						getToolGuidelines: () => this._toolPromptGuidelines,
-						getMode: () => readCodemodeSettings(this.settingsManager.getSettings()).mode,
-						getInlineBudget: () => readCodemodeSettings(this.settingsManager.getSettings()).inlineBudget,
+						getMode: () => this.settingsManager.getCodemodeMode(),
+						getInlineBudget: () => this.settingsManager.getCodemodeInlineBudget(),
 						appendEntry: (customType, data) => this._appendCustomEntry(customType, data),
 					},
 				});

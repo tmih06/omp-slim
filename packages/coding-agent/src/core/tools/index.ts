@@ -1,12 +1,9 @@
-import { type CodemodeToolOptions, createCodemodeTool, createCodemodeToolDefinition } from "./codemode/tool.ts";
-
 export {
 	type CodemodeToolDetails,
 	type CodemodeToolOptions,
 	CODEMODE_TOOL_NAME,
 	createCodemodeTool,
 	createCodemodeToolDefinition,
-	readCodemodeSettings,
 } from "./codemode/tool.ts";
 export {
 	type BashOperations,
@@ -92,6 +89,7 @@ export {
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { ToolDefinition } from "../extensions/types.ts";
 import { type BashToolOptions, createBashTool, createBashToolDefinition } from "./bash.ts";
+import { type CodemodeToolOptions, createCodemodeTool, createCodemodeToolDefinition } from "./codemode/tool.ts";
 import { createEditTool, createEditToolDefinition, type EditToolOptions } from "./edit.ts";
 import { createFindTool, createFindToolDefinition, type FindToolOptions } from "./find.ts";
 import { createGrepTool, createGrepToolDefinition, type GrepToolOptions } from "./grep.ts";

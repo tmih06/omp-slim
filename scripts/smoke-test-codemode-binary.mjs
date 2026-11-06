@@ -38,8 +38,7 @@ async function readRequest(request) {
 	return body;
 }
 
-function toolResultContainsMarker(body) {
-	const payload = JSON.parse(body);
+function toolResultContainsMarker(payload) {
 	return (
 		Array.isArray(payload.messages) &&
 		payload.messages.some(
@@ -61,10 +60,14 @@ async function main() {
 			response.writeHead(404).end();
 			return;
 		}
-		const body = await readRequest(request);
+		const body = JSON.parse(await readRequest(request));
 		requestCount++;
 		const id = `chatcmpl-codemode-smoke-${requestCount}`;
 		if (requestCount === 1) {
+			if (!Array.isArray(body.tools) || !body.tools.some((tool) => tool?.function?.name === "codemode")) {
+				sendCompletion(response, [completionChunk(id, { role: "assistant", content: FAILURE_MARKER }, "stop")]);
+				return;
+			}
 			sendCompletion(response, [
 				completionChunk(id, {
 					role: "assistant",
@@ -112,60 +115,65 @@ async function main() {
 			}),
 		);
 
-		const piArgs = [
-			"--provider",
-			"codemode-smoke",
-			"--model",
-			"codemode-smoke",
-			"--tools",
-			"codemode",
-			"--print",
-			"--no-session",
-			"--offline",
-			"--no-context-files",
-			"--no-skills",
-			"--no-prompt-templates",
-			"--no-themes",
-			"Run the codemode binary smoke test.",
-		];
-		const javaScript = extname(binary) === ".js";
-		const child = spawn(javaScript ? process.execPath : binary, javaScript ? [binary, ...piArgs] : piArgs, {
-			cwd: tempDir,
-			env: {
-				...process.env,
-				PI_CODING_AGENT_DIR: tempDir,
-				PI_OFFLINE: "1",
-			},
-			stdio: ["ignore", "pipe", "pipe"],
-		});
-		let stdout = "";
-		let stderr = "";
-		child.stdout.on("data", (chunk) => {
-			stdout += chunk.toString();
-		});
-		child.stderr.on("data", (chunk) => {
-			stderr += chunk.toString();
-		});
-		const exitCode = await new Promise((resolveExit, reject) => {
-			const timer = setTimeout(() => {
-				child.kill();
-				reject(new Error(`Smoke test timed out after ${TIMEOUT_MS} ms`));
-			}, TIMEOUT_MS);
-			child.once("error", (error) => {
-				clearTimeout(timer);
-				reject(error);
+		for (const scenario of [
+			{ name: "explicit codemode", args: ["--tools", "codemode"] },
+			{ name: "default codemode without extensions", args: ["--no-extensions"] },
+		]) {
+			requestCount = 0;
+			const piArgs = [
+				"--provider",
+				"codemode-smoke",
+				"--model",
+				"codemode-smoke",
+				...scenario.args,
+				"--print",
+				"--no-session",
+				"--offline",
+				"--no-context-files",
+				"--no-skills",
+				"--no-prompt-templates",
+				"--no-themes",
+				"Run the codemode binary smoke test.",
+			];
+			const javaScript = extname(binary) === ".js";
+			const child = spawn(javaScript ? process.execPath : binary, javaScript ? [binary, ...piArgs] : piArgs, {
+				cwd: tempDir,
+				env: {
+					...process.env,
+					OMP_SLIM_CODING_AGENT_DIR: tempDir,
+					PI_OFFLINE: "1",
+				},
+				stdio: ["ignore", "pipe", "pipe"],
 			});
-			child.once("exit", (code) => {
-				clearTimeout(timer);
-				resolveExit(code);
+			let stdout = "";
+			let stderr = "";
+			child.stdout.on("data", (chunk) => {
+				stdout += chunk.toString();
 			});
-		});
-		if (exitCode !== 0 || !stdout.includes(SUCCESS_MARKER) || requestCount < 2) {
-			throw new Error(
-				`Codemode binary smoke test failed (exit ${exitCode}, requests ${requestCount})\nstdout:\n${stdout}\nstderr:\n${stderr}`,
-			);
+			child.stderr.on("data", (chunk) => {
+				stderr += chunk.toString();
+			});
+			const exitCode = await new Promise((resolveExit, reject) => {
+				const timer = setTimeout(() => {
+					child.kill();
+					reject(new Error(`Smoke test timed out after ${TIMEOUT_MS} ms`));
+				}, TIMEOUT_MS);
+				child.once("error", (error) => {
+					clearTimeout(timer);
+					reject(error);
+				});
+				child.once("exit", (code) => {
+					clearTimeout(timer);
+					resolveExit(code);
+				});
+			});
+			if (exitCode !== 0 || !stdout.includes(SUCCESS_MARKER) || requestCount < 2) {
+				throw new Error(
+					`Codemode smoke test failed (${scenario.name}, exit ${exitCode}, requests ${requestCount})\nstdout:\n${stdout}\nstderr:\n${stderr}`,
+				);
+			}
+			process.stdout.write(`${scenario.name}: ${stdout}`);
 		}
-		process.stdout.write(stdout);
 	} finally {
 		await new Promise((resolveClose) => server.close(resolveClose));
 		await rm(tempDir, { recursive: true, force: true });

@@ -8,8 +8,16 @@
  */
 
 import { Container, Spacer, Text } from "@earendil-works/pi-tui";
+import type { TSchema } from "typebox";
 import type { ToolDefinition } from "../../extensions/types.ts";
-import { getTextOutput, replaceTabs, startToolTimer, str, toolTimerText } from "../render-utils.ts";
+import {
+	getTextOutput,
+	replaceTabs,
+	startToolTimer,
+	str,
+	type ToolTimerState,
+	toolTimerText,
+} from "../render-utils.ts";
 import { keyHint } from "../../../modes/interactive/components/keybinding-hints.ts";
 import { VisualLinePreview } from "../../../modes/interactive/components/visual-truncate.ts";
 import { CodeHighlighter, type Theme } from "../../../modes/interactive/theme/theme.ts";
@@ -22,7 +30,7 @@ const COLLAPSED_ARGS_CHARS = 80;
 const SCRIPT_HEADER = /^Script (completed|failed)\nWall time [\d.]+ seconds\nOutput:\n$/;
 
 /** Renderer state of a codemode row. */
-interface CodemodeRenderState {
+interface CodemodeRenderState extends ToolTimerState {
 	// Progress, timer ticks and expanding redraw the call, so the row keeps the script's highlighting.
 	scriptHighlighter?: CodeHighlighter;
 }
@@ -69,7 +77,7 @@ function formatCall(call: CodemodeNestedCall, theme: Theme, expanded: boolean): 
 }
 
 export const codemodeRenderers: Pick<
-	ToolDefinition<any, CodemodeToolDetails | undefined>,
+	ToolDefinition<TSchema, CodemodeToolDetails | undefined, CodemodeRenderState>,
 	"renderCall" | "renderResult"
 > = {
 	renderCall(args, theme, context) {
@@ -85,9 +93,8 @@ export const codemodeRenderers: Pick<
 		}
 		component.addChild(new Text(title, 0, 0));
 		if (code) {
-			const state = context.state as CodemodeRenderState;
-			state.scriptHighlighter ??= new CodeHighlighter();
-			const highlighted = state.scriptHighlighter
+			context.state.scriptHighlighter ??= new CodeHighlighter();
+			const highlighted = context.state.scriptHighlighter
 				.highlight(replaceTabs(code.replace(/\r/g, "").trimEnd()), "javascript")
 				.join("\n");
 			component.addChild(

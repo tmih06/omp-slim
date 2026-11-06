@@ -26,7 +26,7 @@ import { createHarness } from "./suite/harness.ts";
 
 describe("system prompt updates", () => {
 	test("declares the prompt and tools once and reuses them across resume", async () => {
-		const harness = await createHarness();
+		const harness = await createHarness({ initialActiveToolNames: ["read", "codemode"] });
 		try {
 			harness.setResponses([fauxAssistantMessage("first"), fauxAssistantMessage("second")]);
 			await harness.session.prompt("one");
@@ -46,6 +46,7 @@ describe("system prompt updates", () => {
 			if (head?.role !== "system") throw new Error("expected system message");
 			expect(head.content).toBe("");
 			expect(Object.keys(head.sections ?? {})).toEqual(["preamble", "tools", "rules", "docs", "cwd"]);
+			expect(head.toolsAdded?.map((tool) => tool.name)).toEqual(["read", "codemode"]);
 			expect(getSystemMessageText(head)).toBe(harness.session.systemPrompt);
 		} finally {
 			harness.cleanup();
