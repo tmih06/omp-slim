@@ -42,11 +42,13 @@ Pi integrates directly with the llama.cpp router. The router discovers GGUF file
 
 Follow [Local Models with llama.cpp](llama-cpp.md) for server startup, model layout, downloads, and connection troubleshooting.
 
-For Ollama, LM Studio, vLLM, SGLang, and other compatible servers, [configure a compatible endpoint](#configure-a-compatible-endpoint) in `models.json`.
+For Ollama, LM Studio, vLLM, SGLang, and other compatible servers, [configure a compatible endpoint](#configure-a-compatible-endpoint) in `models.yml`.
 
 ## Configure a compatible endpoint
 
-Use [`models.json`](configuration.md#agent-directory) when an endpoint speaks an API Pi already supports. This includes most Ollama, LM Studio, vLLM, SGLang, and proxy deployments.
+Use [`models.yml`](configuration.md#agent-directory) when an endpoint speaks an API omp-slim already supports. This includes most Ollama, LM Studio, vLLM, SGLang, and proxy deployments.
+
+The file is read as YAML, and the schema is identical to omp's `models.yml`, so an existing omp install keeps its custom providers without edits. A `models.json` in the same directory is used when no YAML file exists; if both are present, `models.yml` wins.
 
 ```json
 {

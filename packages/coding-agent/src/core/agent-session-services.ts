@@ -1,7 +1,6 @@
-import { join } from "node:path";
 import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import type { Model } from "@earendil-works/pi-ai";
-import { getAgentDir } from "../config.ts";
+import { getAgentDir, getModelsPath } from "../config.ts";
 import { resolvePath } from "../utils/paths.ts";
 import type { SessionStartEvent, ToolDefinition } from "./extensions/index.ts";
 import { ModelRuntime } from "./model-runtime.ts";
@@ -141,7 +140,7 @@ export async function createAgentSessionServices(
 		options.modelRuntime ??
 		(await ModelRuntime.create({
 			agentDir,
-			modelsPath: join(agentDir, "models.json"),
+			modelsPath: getModelsPath(agentDir),
 			signal: options.modelRuntimeSignal,
 		}));
 	const settingsManager = options.settingsManager ?? SettingsManager.create(cwd, agentDir);

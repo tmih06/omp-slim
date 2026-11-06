@@ -2,6 +2,7 @@
 
 import { readFile } from "node:fs/promises";
 import { type Static, Type } from "typebox";
+import { parse as parseYaml } from "yaml";
 import { Compile } from "typebox/compile";
 import type { TLocalizedValidationError } from "typebox/error";
 import { stripJsonComments } from "../utils/json.ts";
@@ -156,7 +157,31 @@ function deepFreeze<T>(value: T): T {
 	return Object.freeze(value);
 }
 
-/** One immutable load of models.json. */
+/** `models.yml` uses OMP's YAML spelling; `models.json` keeps supporting comments and trailing commas. */
+function isYamlModelsFile(path: string): boolean {
+	return /\.ya?ml$/i.test(path);
+}
+
+/** Parse the configured models file. Returns the parsed value or an error message. */
+function parseModelsFile(content: string, path: string): { value?: unknown; error?: string } {
+	const text = stripBom(content);
+	if (isYamlModelsFile(path)) {
+		try {
+			return { value: parseYaml(text) };
+		} catch (error) {
+			return { error: `Failed to parse ${path}: ${error instanceof Error ? error.message : error}` };
+		}
+	}
+	try {
+		return { value: JSON.parse(stripJsonComments(text)) };
+	} catch (error) {
+		return {
+			error: `Failed to parse models.json: ${error instanceof Error ? error.message : error}\n\nFile: ${path}`,
+		};
+	}
+}
+
+/** One immutable load of models.json or models.yml. */
 export class ModelConfig {
 	private readonly providers: ReadonlyMap<string, ModelsJsonProvider>;
 	private readonly error: string | undefined;
@@ -180,14 +205,13 @@ export class ModelConfig {
 			);
 		}
 
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(stripJsonComments(stripBom(content)));
-		} catch (error) {
-			return new ModelConfig(
-				new Map(),
-				`Failed to parse models.json: ${error instanceof Error ? error.message : error}\n\nFile: ${path}`,
-			);
+		const parsedResult = parseModelsFile(content, path);
+		if (parsedResult.error !== undefined) {
+			return new ModelConfig(new Map(), parsedResult.error);
+		}
+		const parsed = parsedResult.value as { providers: Record<string, ModelsJsonProvider> } | null;
+		if (parsed === null || typeof parsed !== "object") {
+			return new ModelConfig(new Map(), `Invalid models config: expected an object.\n\nFile: ${path}`);
 		}
 
 		if (!validateModelsConfig.Check(parsed)) {

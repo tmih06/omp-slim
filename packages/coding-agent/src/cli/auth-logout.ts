@@ -16,7 +16,7 @@ const AUTH_LOGOUT_USAGE = `${APP_NAME} auth logout <provider> [--account <key>]`
 
 /**
  * Run `pi auth logout <provider>`: remove the credential `pi auth login` or /login stored, and return the exit code.
- * Environment variables and models.json config stay, as with /logout.
+ * Environment variables and models.yml config stay, as with /logout.
  *
  * With `--account <key>`, remove only that account and keep the provider's other accounts.
  */
@@ -66,7 +66,7 @@ export async function runAuthLogout(args: string[], options: AuthLogoutOptions):
 	const providerName = provider?.name ?? providerRef;
 	if (!credential) {
 		terminal.write(
-			`No stored credentials for ${providerName}. Environment variables and models.json config are unchanged.`,
+			`No stored credentials for ${providerName}. Environment variables and models.yml config are unchanged.`,
 		);
 		return 0;
 	}
@@ -91,7 +91,7 @@ export async function runAuthLogout(args: string[], options: AuthLogoutOptions):
 	terminal.write(
 		credential.type === "oauth"
 			? `Logged out of ${providerName}.`
-			: `Removed stored API key for ${providerName}. Environment variables and models.json config are unchanged.`,
+			: `Removed stored API key for ${providerName}. Environment variables and models.yml config are unchanged.`,
 	);
 	return 0;
 }
