@@ -35,26 +35,55 @@ describe("version checks", () => {
 	});
 
 	it("returns only newer versions", async () => {
-		const fetchMock = vi.fn(async () => Response.json({ version: "1.2.3" }));
+		const fetchMock = vi.fn(async () => Response.json({ tag_name: "v1.2.3" }));
 		vi.stubGlobal("fetch", fetchMock);
 
 		await expect(checkForNewPiVersion("1.2.3")).resolves.toBeUndefined();
 		await expect(checkForNewPiVersion("1.2.2")).resolves.toEqual({ version: "1.2.3" });
 	});
 
-	it("uses the pi.dev version check api with a pi user agent", async () => {
-		const fetchMock = vi.fn(async () => Response.json({ version: "1.2.4" }));
+	it("reads the newest release of the fork with a pi user agent", async () => {
+		const fetchMock = vi.fn(async () =>
+			Response.json({ tag_name: "v1.2.4", html_url: "https://github.com/tmih06/omp-slim/releases/tag/v1.2.4" }),
+		);
 		vi.stubGlobal("fetch", fetchMock);
 
 		await expect(getLatestPiVersion("1.2.3")).resolves.toBe("1.2.4");
 		expect(fetchMock).toHaveBeenCalledWith(
-			"https://pi.dev/api/latest-version",
+			"https://api.github.com/repos/tmih06/omp-slim/releases/latest",
 			expect.objectContaining({
 				headers: expect.objectContaining({
 					"User-Agent": expect.stringMatching(/^pi\/1\.2\.3 /),
-					accept: "application/json",
+					accept: "application/vnd.github+json",
 				}),
 			}),
+		);
+	});
+
+	it("strips the v prefix from release tags", async () => {
+		const fetchMock = vi.fn(async () => Response.json({ tag_name: "v2.0.0" }));
+		vi.stubGlobal("fetch", fetchMock);
+
+		await expect(getLatestPiRelease("0.1.0")).resolves.toEqual({ version: "2.0.0" });
+	});
+
+	it("treats a repository without releases as having nothing to update to", async () => {
+		const fetchMock = vi.fn(async () => new Response("", { status: 404 }));
+		vi.stubGlobal("fetch", fetchMock);
+
+		await expect(getLatestPiRelease("0.1.0")).resolves.toBeUndefined();
+		await expect(checkForNewPiVersion("0.1.0")).resolves.toBeUndefined();
+	});
+
+	it("does not treat an upstream version as a fork release", async () => {
+		// Upstream pi ships 1.5.0; the fork is at 0.1.0. Only fork tags may trigger a notification.
+		const fetchMock = vi.fn(async () => Response.json({ tag_name: "v1.5.0" }));
+		vi.stubGlobal("fetch", fetchMock);
+
+		await expect(checkForNewPiVersion("0.1.0")).resolves.toEqual({ version: "1.5.0" });
+		expect(fetchMock).toHaveBeenCalledWith(
+			"https://api.github.com/repos/tmih06/omp-slim/releases/latest",
+			expect.anything(),
 		);
 	});
 
@@ -63,7 +92,7 @@ describe("version checks", () => {
 			.fn()
 			.mockRejectedValueOnce(new Error("fetch failed"))
 			.mockRejectedValueOnce(new Error("fetch failed"))
-			.mockResolvedValueOnce(Response.json({ version: "1.2.4" }));
+			.mockResolvedValueOnce(Response.json({ tag_name: "v1.2.4" }));
 		vi.stubGlobal("fetch", fetchMock);
 
 		await expect(getLatestPiRelease("1.2.3", { retry: true })).resolves.toEqual({ version: "1.2.4" });
@@ -89,26 +118,28 @@ describe("version checks", () => {
 		expect(formatVersionCheckError(error)).toBe("fetch failed (ETIMEDOUT, ENETUNREACH)");
 	});
 
-	it("returns the active package metadata from the version check api", async () => {
+	it("returns the release page and notes body", async () => {
 		const fetchMock = vi.fn(async () =>
 			Response.json({
-				packageName: "@new-scope/pi",
-				version: "1.2.4",
+				tag_name: "v1.2.4",
+				body: " **Read this** ",
+				html_url: "https://github.com/tmih06/omp-slim/releases/tag/v1.2.4",
 			}),
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
 		await expect(getLatestPiRelease("1.2.3")).resolves.toEqual({
-			packageName: "@new-scope/pi",
 			version: "1.2.4",
+			note: "**Read this**",
+			htmlUrl: "https://github.com/tmih06/omp-slim/releases/tag/v1.2.4",
 		});
 	});
 
-	it("returns update notes from the version check api", async () => {
-		const fetchMock = vi.fn(async () => Response.json({ note: " **Read this** ", version: "1.2.4" }));
+	it("ignores tags that are not versions", async () => {
+		const fetchMock = vi.fn(async () => Response.json({ tag_name: "nightly" }));
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(getLatestPiRelease("1.2.3")).resolves.toEqual({ note: "**Read this**", version: "1.2.4" });
+		await expect(getLatestPiRelease("0.1.0")).resolves.toBeUndefined();
 	});
 
 	it("skips automatic api calls when version checks are disabled", async () => {
@@ -122,7 +153,7 @@ describe("version checks", () => {
 
 	it("allows direct api calls when automatic version checks are disabled", async () => {
 		process.env.PI_SKIP_VERSION_CHECK = "1";
-		const fetchMock = vi.fn(async () => Response.json({ version: "1.2.4" }));
+		const fetchMock = vi.fn(async () => Response.json({ tag_name: "v1.2.4" }));
 		vi.stubGlobal("fetch", fetchMock);
 
 		await expect(getLatestPiVersion("1.2.3")).resolves.toBe("1.2.4");

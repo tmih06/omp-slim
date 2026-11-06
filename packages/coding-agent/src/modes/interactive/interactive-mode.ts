@@ -60,6 +60,7 @@ import {
 	APP_TITLE,
 	CONFIG_DIR_NAME,
 	detectInstallChange,
+	detectInstallMethod,
 	getAgentDir,
 	getAuthPath,
 	getDebugLogPath,
@@ -4807,15 +4808,21 @@ export class InteractiveMode {
 	}
 
 	showNewVersionNotification(release: LatestPiRelease): void {
+		// The fork ships compiled binaries, which no package manager owns; `update` cannot replace one.
+		// Those installs are told where to download, and everything else is told the exact command.
+		const releaseUrl = release.htmlUrl ?? "https://github.com/tmih06/omp-slim/releases/latest";
 		const updateInstruction = () =>
-			theme.fg("muted", `New version ${release.version} is available. Run `) +
-			theme.fg("accent", `${APP_NAME} update`);
-		const changelogUrl = "https://pi.dev/changelog";
+			detectInstallMethod() === "bun-binary"
+				? theme.fg("muted", `New version ${release.version} is available. Download it from `) +
+					theme.fg("accent", releaseUrl)
+				: theme.fg("muted", `New version ${release.version} is available. Run `) +
+					theme.fg("accent", `${APP_NAME} update`);
+		const changelogUrl = releaseUrl;
 		const changelogLine = () => {
 			const changelogLink = getCapabilities().hyperlinks
 				? hyperlink(theme.fg("accent", changelogUrl), changelogUrl)
 				: theme.fg("accent", changelogUrl);
-			return theme.fg("muted", "Changelog: ") + changelogLink;
+			return theme.fg("muted", "Release notes: ") + changelogLink;
 		};
 		const note = release.note?.trim();
 

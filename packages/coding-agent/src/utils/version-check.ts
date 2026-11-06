@@ -2,13 +2,16 @@ import { compare, valid } from "semver";
 import { fetchWithRetry } from "./management-http.ts";
 import { getPiUserAgent } from "./pi-user-agent.ts";
 
-const LATEST_VERSION_URL = "https://pi.dev/api/latest-version";
+/** The fork's repository. Releases here, not upstream's API, are the update source. */
+const RELEASE_REPO = "tmih06/omp-slim";
+const LATEST_RELEASE_URL = `https://api.github.com/repos/${RELEASE_REPO}/releases/latest`;
 const DEFAULT_VERSION_CHECK_TIMEOUT_MS = 10000;
 
 export interface LatestPiRelease {
 	version: string;
-	packageName?: string;
 	note?: string;
+	/** Page a human opens to see the release; the notification links here. */
+	htmlUrl?: string;
 }
 
 /** Include useful errno details hidden behind Node's generic "fetch failed" error. */
@@ -48,6 +51,17 @@ export function isNewerPackageVersion(candidateVersion: string, currentVersion: 
 	return candidateVersion.trim() !== currentVersion.trim();
 }
 
+/** Release tags are `v<version>`; the raw tag is tolerated so a mistyped tag still resolves. */
+function normalizeReleaseTag(tag: unknown): string | undefined {
+	if (typeof tag !== "string") return undefined;
+	const trimmed = tag.trim().replace(/^v(?=\d)/, "");
+	return trimmed && valid(trimmed) ? trimmed : undefined;
+}
+
+/**
+ * The newest published release of the fork. A repository without releases answers 404, which is not
+ * an error: it means there is nothing to update to.
+ */
 export async function getLatestPiRelease(
 	currentVersion: string,
 	options: { timeoutMs?: number; retry?: boolean } = {},
@@ -55,11 +69,11 @@ export async function getLatestPiRelease(
 	if (process.env.PI_OFFLINE) return undefined;
 
 	const response = await fetchWithRetry(
-		LATEST_VERSION_URL,
+		LATEST_RELEASE_URL,
 		{
 			headers: {
 				"User-Agent": getPiUserAgent(currentVersion),
-				accept: "application/json",
+				accept: "application/vnd.github+json",
 			},
 		},
 		{
@@ -67,23 +81,23 @@ export async function getLatestPiRelease(
 			timeoutMs: options.timeoutMs ?? DEFAULT_VERSION_CHECK_TIMEOUT_MS,
 		},
 	);
+	if (response.status === 404) return undefined;
 	if (!response.ok) return undefined;
 
 	const data = (await response.json()) as {
-		packageName?: unknown;
-		version?: unknown;
-		note?: unknown;
+		tag_name?: unknown;
+		body?: unknown;
+		html_url?: unknown;
 	};
-	if (typeof data.version !== "string" || !data.version.trim()) {
-		return undefined;
-	}
-	const packageName =
-		typeof data.packageName === "string" && data.packageName.trim() ? data.packageName.trim() : undefined;
-	const note = typeof data.note === "string" && data.note.trim() ? data.note.trim() : undefined;
+	const version = normalizeReleaseTag(data.tag_name);
+	if (!version) return undefined;
+
+	const note = typeof data.body === "string" && data.body.trim() ? data.body.trim() : undefined;
+	const htmlUrl = typeof data.html_url === "string" && data.html_url.trim() ? data.html_url.trim() : undefined;
 	return {
-		version: data.version.trim(),
-		packageName,
+		version,
 		...(note ? { note } : {}),
+		...(htmlUrl ? { htmlUrl } : {}),
 	};
 }
 
