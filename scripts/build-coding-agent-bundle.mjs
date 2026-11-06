@@ -190,6 +190,7 @@ const lazyEntryPoints = {
 	openrouter: join(aiDistDir, "auth", "oauth", "openrouter.js"),
 	radius: join(aiDistDir, "auth", "oauth", "radius.js"),
 	xai: join(aiDistDir, "auth", "oauth", "xai.js"),
+	zai: join(aiDistDir, "auth", "oauth", "zai.js"),
 };
 
 // Every OAuth flow loaded through importOAuthModule() must have a lazy entry,

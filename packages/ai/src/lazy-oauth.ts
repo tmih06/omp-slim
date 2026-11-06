@@ -18,6 +18,7 @@ export function registerLazyOAuthFlows(): void {
 		kimiCoding: async () => (await import("./auth/oauth/kimi-coding.ts")).kimiCodingOAuth,
 		meta: async () => (await import("./auth/oauth/meta.ts")).metaOAuth,
 		xai: async () => (await import("./auth/oauth/xai.ts")).xaiOAuth,
+		zai: async () => (await import("./auth/oauth/zai.ts")).zaiOAuth,
 		radius: async (options) => (await import("./auth/oauth/radius.ts")).createRadiusOAuth(options),
 	});
 }

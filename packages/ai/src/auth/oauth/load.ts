@@ -24,6 +24,7 @@ type OAuthFlowLoaders = {
 	meta: () => OAuthAuth | Promise<OAuthAuth>;
 	xai: () => OAuthAuth | Promise<OAuthAuth>;
 	radius: (options: { name: string; gateway: string }) => OAuthAuth | Promise<OAuthAuth>;
+	zai: () => OAuthAuth | Promise<OAuthAuth>;
 };
 
 let bundledLoaders: OAuthFlowLoaders | undefined;
@@ -32,6 +33,11 @@ let bundledLoaders: OAuthFlowLoaders | undefined;
 export function registerBundledOAuthFlowLoaders(loaders: OAuthFlowLoaders): void {
 	bundledLoaders = loaders;
 }
+
+export const loadZaiOAuth = async (): Promise<OAuthAuth> => {
+	if (bundledLoaders) return bundledLoaders.zai();
+	return ((await importOAuthModule("./zai.ts")) as { zaiOAuth: OAuthAuth }).zaiOAuth;
+};
 
 export const loadAnthropicOAuth = async (): Promise<OAuthAuth> => {
 	if (bundledLoaders) return bundledLoaders.anthropic();
