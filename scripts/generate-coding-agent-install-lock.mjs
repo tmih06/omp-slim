@@ -34,6 +34,16 @@ function readJson(path) {
 	return JSON.parse(readFileSync(path, "utf8"));
 }
 
+/** Version of an installed package, or undefined when it is absent on this platform. */
+function tryReadInstalledVersion(path) {
+	try {
+		return readJson(path).version;
+	} catch (error) {
+		if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return undefined;
+		throw error;
+	}
+}
+
 function packageDependencies(entry) {
 	return {
 		...(entry.dependencies ?? {}),
@@ -233,6 +243,30 @@ function addExternalPackage(lockPackages, installLockPackages, addedPaths, queue
 	const entry = lockPackages[sourceLockPath];
 	// Bun omits lifecycle-script metadata. Inspect the installed, locked package before
 	// including it so the existing installer allowlist remains enforced.
+	//
+	// Optional native packages for other platforms are not installed on this host, and there is
+	// nothing to inspect for them. They still belong in the lock: the installer resolves them on the
+	// machine it runs on. Their entry is taken from the lock as-is.
+	const installedVersion = tryReadInstalledVersion(join(repoRoot, sourceLockPath, "package.json"));
+	if (installedVersion === undefined) {
+		// A lock entry with `os`/`cpu` describes a platform-specific package; Bun installs only the
+		// one matching this host, so the others are legitimately absent here.
+		const platformSpecific = entry.os !== undefined || entry.cpu !== undefined;
+		if (!platformSpecific) {
+			throw new Error(`Missing installed package for ${outputLockPath}; run bun install --ignore-scripts`);
+		}
+		installLockPackages[outputLockPath] = copyLockEntry({ ...entry });
+		addedPaths.add(outputLockPath);
+		for (const dependencyName of Object.keys(packageDependencies(entry))) {
+			queue.push({
+				name: dependencyName,
+				sourceFrom: sourceLockPath,
+				sourceBase: item.sourceBase,
+				outputBase: item.outputBase,
+			});
+		}
+		return;
+	}
 	const installed = readJson(join(repoRoot, sourceLockPath, "package.json"));
 	if (installed.version !== entry.version) {
 		throw new Error(

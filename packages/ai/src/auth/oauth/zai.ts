@@ -1,29 +1,28 @@
 /**
  * Z.ai (GLM Coding Plan) sign-in.
  *
- * Z.ai's subscription sign-in is an authorization-code flow that ends in a durable `id.secret` API
- * key rather than a refreshable token pair: the OAuth grant is exchanged for a short-lived business
- * token, which then provisions a named key on the account. That end state is why this flow needs no
- * request-protocol work — the existing `zai` provider already speaks OpenAI and Anthropic to
- * `api.z.ai`, so signing in just needs to put the minted key where the provider looks for one.
+ * Z.ai's subscription sign-in ends in a durable `id.secret` API key rather than a refreshable token
+ * pair. That end state is why no request-protocol work is needed: the existing `zai` provider already
+ * speaks OpenAI and Anthropic to `api.z.ai`, so signing in only has to put the minted key where the
+ * provider looks for one.
  *
- * The flow is transcribed from OMP's declarative `auth "zai-coding-plan"` rule so the client id,
- * endpoints, and provisioning sequence match what Z.ai's servers expect. Z.ai rejects loopback
- * redirect URIs for this client, so the callback is the `zcode://` desktop scheme and the code is
- * pasted in by hand.
+ * The key provisioning is OMP's `zaiMintKeyHook`, imported rather than reimplemented. It performs the
+ * business login, resolves the default organization and project, reuses or creates a named key, and
+ * reads the secret — the sequence Z.ai's servers require. Only the authorization-code half is local,
+ * because it needs this package's prompt and cancellation semantics.
+ *
+ * Authorization parameters follow OMP's `auth "zai-coding-plan"` rule: no PKCE, and the `zcode://`
+ * callback scheme, since Z.ai rejects loopback redirect URIs for this client.
  */
 
 import { getProviderEnvValue } from "../../utils/provider-env.ts";
 import type { OAuthAuth, OAuthCredential, ProviderAuthInteraction } from "../types.ts";
+import { createOmpLoginController } from "./omp-adapter.ts";
 
 const DEFAULT_CLIENT_ID = "client_P8X5CMWmlaRO9gyO-KSqtg";
 const DEFAULT_AUTHORIZE_URL = "https://chat.z.ai/api/oauth/authorize";
 const DEFAULT_TOKEN_URL = "https://zcode.z.ai/api/v1/oauth/token";
 const DEFAULT_REDIRECT_URI = "zcode://zai-auth/callback";
-const BIZ_BASE = "https://api.z.ai";
-const BUSINESS_LOGIN_URL = `${BIZ_BASE}/api/auth/z/login`;
-/** The key name this build creates, so it never mutates another client's key. */
-const KEY_NAME = "omp-slim";
 const REQUEST_TIMEOUT_MS = 30_000;
 
 function env(name: string): string | undefined {
@@ -31,139 +30,34 @@ function env(name: string): string | undefined {
 	return value && value.length > 0 ? value : undefined;
 }
 
-/** Trim a JSON value to a non-empty string, or undefined. */
-function trimmed(value: unknown): string | undefined {
-	return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-/** First non-empty trimmed string among the candidates. */
-function pickString(...values: unknown[]): string | undefined {
+function firstString(...values: unknown[]): string | undefined {
 	for (const value of values) {
-		const text = trimmed(value);
-		if (text) return text;
+		if (typeof value === "string" && value.trim().length > 0) return value.trim();
 	}
 	return undefined;
 }
 
 /**
- * Z.ai wraps responses in `{ code, msg, data, success }`. The OAuth endpoint uses `code: 0`, the
- * business endpoints `code: 200` / `success: true`; bodies without a wrapper pass through.
+ * Turn a pasted redirect URL or bare code into the authorization code.
+ *
+ * The callback uses a custom scheme that no browser can load, so the user copies the redirect URL out
+ * of the address bar; a shell may also leave part of the query attached to a bare paste.
  */
-function unwrapEnvelope(body: unknown, operation: string): unknown {
-	if (!body || typeof body !== "object") return body;
-	const envelope = body as { code?: unknown; msg?: string; success?: unknown; data?: unknown };
-	if (!("code" in envelope) && !("success" in envelope)) return body;
-	const code = envelope.code;
-	const ok = code == null || code === 0 || code === 200 || code === "0" || code === "200";
-	if (envelope.success === false || !ok) {
-		throw new Error(`Z.ai ${operation} failed: ${envelope.msg ?? `code ${String(code)}`}`);
-	}
-	return "data" in envelope ? envelope.data : envelope;
-}
-
-async function requestJson(
-	url: string,
-	init: { method: "GET" | "POST"; body?: unknown; headers?: Record<string, string> },
-	signal: AbortSignal,
-): Promise<unknown> {
-	const response = await fetch(url, {
-		method: init.method,
-		headers: { ...init.headers, ...(init.body === undefined ? {} : { "Content-Type": "application/json" }) },
-		...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
-		signal: AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
-	});
-	const text = await response.text();
-	if (!response.ok) throw new Error(`Z.ai request failed (${response.status}): ${text.slice(0, 300)}`);
-	return text.length > 0 ? JSON.parse(text) : undefined;
-}
-
-/** Turn a pasted redirect URL or bare code into the authorization code. */
 export function parseZaiAuthorizationInput(input: string): string | undefined {
 	const text = input.trim();
 	if (text.length === 0) return undefined;
 	try {
 		const url = new URL(text);
-		return pickString(url.searchParams.get("code"), url.searchParams.get("authCode"));
+		return firstString(url.searchParams.get("code"), url.searchParams.get("authCode"));
 	} catch {
-		// Not a URL: treat it as the code itself, minus any query the shell left attached.
-		return pickString(text.split("&")[0].split("#")[0]);
+		return firstString(text.split("&")[0].split("#")[0]);
 	}
 }
 
-interface ZaiProject {
-	projectId?: unknown;
-	isDefault?: unknown;
-}
-interface ZaiOrganization {
-	organizationId?: unknown;
-	isDefault?: unknown;
-	projects?: ZaiProject[];
-}
-
-/** Coerce an api-keys response (bare array or a common wrapper) into records. */
-function keyRecords(value: unknown): Array<Record<string, unknown>> {
-	if (Array.isArray(value)) return value as Array<Record<string, unknown>>;
-	if (value && typeof value === "object") {
-		const record = value as Record<string, unknown>;
-		for (const field of ["list", "keys", "apiKeys", "records"]) {
-			if (Array.isArray(record[field])) return record[field] as Array<Record<string, unknown>>;
-		}
-	}
-	return [];
-}
-
-/**
- * Provision the durable key from a short-lived OAuth access token: business login, pick the default
- * organization and project, reuse or create this build's key, then read its secret.
- *
- * The secret is always fetched from the copy endpoint because list responses mask it and the create
- * response's inline secret is not reliable across account states.
- */
-async function mintApiKey(accessToken: string, signal: AbortSignal): Promise<string> {
-	const business = unwrapEnvelope(
-		await requestJson(BUSINESS_LOGIN_URL, { method: "POST", body: { token: accessToken } }, signal),
-		"business login",
-	) as { access_token?: unknown; accessToken?: unknown } | undefined;
-	const bizToken = pickString(business?.access_token, business?.accessToken);
-	if (!bizToken) throw new Error("Z.ai business login returned no access token");
-	const auth = { Authorization: `Bearer ${bizToken}` };
-
-	const customer = unwrapEnvelope(
-		await requestJson(`${BIZ_BASE}/api/biz/customer/getCustomerInfo`, { method: "GET", headers: auth }, signal),
-		"customer lookup",
-	) as { organizations?: ZaiOrganization[] } | undefined;
-	const organizations = Array.isArray(customer?.organizations) ? customer.organizations : [];
-	const organization = organizations.find((entry) => entry?.isDefault) ?? organizations[0];
-	const projects = Array.isArray(organization?.projects) ? organization.projects : [];
-	const project = projects.find((entry) => entry?.isDefault) ?? projects[0];
-	const organizationId = trimmed(organization?.organizationId);
-	const projectId = trimmed(project?.projectId);
-	if (!organizationId || !projectId) {
-		throw new Error("Z.ai key provisioning failed: the account has no organization or project");
-	}
-
-	const keysUrl = `${BIZ_BASE}/api/biz/v1/organization/${encodeURIComponent(organizationId)}/projects/${encodeURIComponent(projectId)}/api_keys`;
-	const existing = keyRecords(
-		unwrapEnvelope(await requestJson(keysUrl, { method: "GET", headers: auth }, signal), "api key list"),
-	).find((key) => key.name === KEY_NAME);
-	const created =
-		existing ??
-		(unwrapEnvelope(
-			await requestJson(keysUrl, { method: "POST", body: { name: KEY_NAME }, headers: auth }, signal),
-			"api key create",
-		) as Record<string, unknown> | undefined);
-	const apiKey = trimmed(created?.apiKey);
-	if (!apiKey) throw new Error("Z.ai key provisioning returned no apiKey");
-
-	const copied = unwrapEnvelope(
-		await requestJson(`${keysUrl}/copy/${encodeURIComponent(apiKey)}`, { method: "GET", headers: auth }, signal),
-		"api key copy",
-	) as { secretKey?: unknown } | undefined;
-	const secretKey = trimmed(copied?.secretKey);
-	if (!secretKey) throw new Error("Z.ai key provisioning returned no secretKey");
-
-	return `${apiKey}.${secretKey}`;
-}
+type ZaiTokenResponse = {
+	zai?: { access_token?: unknown };
+	user?: { email?: unknown; id?: unknown };
+};
 
 async function loginZai(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
 	const clientId = env("ZAI_OAUTH_CLIENT_ID") ?? DEFAULT_CLIENT_ID;
@@ -179,7 +73,6 @@ async function loginZai(interaction: ProviderAuthInteraction): Promise<OAuthCred
 		response_type: "code",
 		state,
 	}).toString();
-
 	interaction.notify({
 		type: "auth_url",
 		url: url.toString(),
@@ -196,22 +89,41 @@ async function loginZai(interaction: ProviderAuthInteraction): Promise<OAuthCred
 	if (!code) throw new Error("Missing authorization code");
 
 	interaction.notify({ type: "progress", message: "Exchanging the authorization code..." });
-	const token = unwrapEnvelope(
-		await requestJson(
-			tokenUrl,
-			{
-				method: "POST",
-				body: { provider: "zai", code, redirect_uri: redirectUri, state },
-			},
-			interaction.signal,
-		),
-		"token exchange",
-	) as { zai?: { access_token?: unknown }; user?: { email?: unknown; id?: unknown } } | undefined;
-	const accessToken = pickString(token?.zai?.access_token);
+	const response = await fetch(tokenUrl, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ provider: "zai", code, redirect_uri: redirectUri, state }),
+		signal: AbortSignal.any([interaction.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
+	});
+	const text = await response.text();
+	if (!response.ok) {
+		throw new Error(`Z.ai token exchange failed (${response.status}): ${text.slice(0, 300)}`);
+	}
+	let body: ZaiTokenResponse;
+	try {
+		body = JSON.parse(text) as ZaiTokenResponse;
+	} catch {
+		throw new Error("Z.ai token exchange returned an unreadable response");
+	}
+	const accessToken = firstString(body.zai?.access_token);
 	if (!accessToken) throw new Error("Z.ai token exchange returned no access token");
 
 	interaction.notify({ type: "progress", message: "Provisioning an API key on your Z.ai account..." });
-	const apiKey = await mintApiKey(accessToken, interaction.signal);
+	// OMP's hook owns the provisioning sequence; only the transport differs.
+	//
+	// Loaded on demand rather than imported at module scope: the OMP package reaches
+	// `@oh-my-pi/pi-utils`, which reads `Bun.env` and parses `.env` files while its module
+	// body evaluates. That is fine in the Bun runtime this CLI ships on, but it throws under
+	// Node, where the test runner executes. Deferring keeps this module loadable everywhere
+	// and only pays the import when a user actually signs in.
+	const { zaiMintKeyHook } = await import("@oh-my-pi/pi-ai/registry/oauth/zai");
+	const controller = createOmpLoginController(interaction);
+	const minted = await zaiMintKeyHook(
+		{ refresh: accessToken, access: accessToken, expires: Number.MAX_SAFE_INTEGER },
+		{ provider: "zai", phase: "login", raw: body, fetch: controller.fetch!, signal: interaction.signal },
+	);
+	const apiKey = firstString(minted.access);
+	if (!apiKey) throw new Error("Z.ai key provisioning returned no API key");
 
 	return {
 		type: "oauth",
@@ -219,8 +131,8 @@ async function loginZai(interaction: ProviderAuthInteraction): Promise<OAuthCred
 		refresh: apiKey,
 		access: apiKey,
 		expires: Number.MAX_SAFE_INTEGER,
-		email: pickString(token?.user?.email),
-		accountId: pickString(token?.user?.id),
+		...(firstString(body.user?.email) ? { email: firstString(body.user?.email) } : {}),
+		...(firstString(body.user?.id) ? { accountId: firstString(body.user?.id) } : {}),
 	};
 }
 

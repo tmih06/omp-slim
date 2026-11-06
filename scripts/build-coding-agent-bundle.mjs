@@ -27,6 +27,29 @@ const allowedExternalPackages = new Set([
 	"supports-color",
 ]);
 
+// `bun:*` specifiers are provided by the Bun runtime that the compiled binary embeds; esbuild has no
+// filesystem path for them, so they must stay external. They cannot be listed by exact name because
+// the set grows (`bun:ffi`, `bun:sqlite`, `bun:test`, …) and a missing one fails the build later.
+const bunBuiltinPlugin = {
+	name: "bun-builtins",
+	setup(build) {
+		build.onResolve({ filter: /^bun(:|$)/ }, (args) => ({ path: args.path, external: true }));
+		// OMP's `dirs.ts` imports its own `package.json` for `version` and `engines`. That file is
+		// outside the package's `exports` map, so esbuild cannot resolve it by specifier; point at the
+		// real path so the JSON import resolves as a normal file.
+		// Resolve it to a namespace of our own and read the file directly, so esbuild never applies
+		// pi-utils' `exports` map (which has no JSON entry) to a relative import inside the package.
+		build.onResolve({ filter: /\.\.[\\/]package\.json$/ }, (args) => {
+			if (!args.importer.includes("@oh-my-pi/pi-utils")) return undefined;
+			return { path: join(repoRoot, "node_modules", "@oh-my-pi", "pi-utils", "package.json"), namespace: "omp-json" };
+		});
+		build.onLoad({ filter: /.*/, namespace: "omp-json" }, (args) => ({
+			contents: readFileSync(args.path, "utf8"),
+			loader: "json",
+		}));
+	},
+};
+
 const lazyJitiPlugin = {
 	name: "lazy-jiti-transform",
 	setup(build) {
@@ -85,6 +108,7 @@ function commonBuildOptions() {
 		format: "esm",
 		legalComments: "none",
 		logLevel: "warning",
+		plugins: [bunBuiltinPlugin, lazyJitiPlugin, httpsProxyAgentNamedExportPlugin],
 		metafile: true,
 		minifySyntax: true,
 		minifyWhitespace: true,
@@ -93,7 +117,7 @@ function commonBuildOptions() {
 		// package replaces it with a synchronous lazy require so jiti loads only
 		// when importing an extension; Babel remains deferred until a cache miss
 		// needs transformation.
-		plugins: [lazyJitiPlugin, httpsProxyAgentNamedExportPlugin],
+
 		sourcemap: false,
 		target: "node22.19",
 		// Do not apply the monorepo's source-oriented path aliases while bundling
@@ -108,6 +132,9 @@ function validateExternalImports(metafiles) {
 	for (const metafile of metafiles) {
 		for (const input of Object.values(metafile.inputs)) {
 			for (const imported of input.imports) {
+				// `<runtime>` is esbuild's marker for a specifier the runtime provides (`bun:*`),
+				// not a package that failed to resolve.
+				if (imported.path === "<runtime>") continue;
 				if (!imported.external || isBuiltin(imported.path) || allowedExternalPackages.has(imported.path)) {
 					continue;
 				}

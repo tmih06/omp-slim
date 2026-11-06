@@ -34,13 +34,17 @@ describe("zai sign-in", () => {
 		expect(parseZaiAuthorizationInput("   ")).toBeUndefined();
 	});
 
-	it("stores the minted key as a non-expiring credential", async () => {
+	// OMP's provisioning hook reaches `@oh-my-pi/pi-utils`, whose module body reads `Bun.env`.
+	// That is fine in the shipped runtime but throws under Node, so this case needs Bun.
+	const itUnderBun = typeof (globalThis as { Bun?: unknown }).Bun === "undefined" ? it.skip : it;
+
+	itUnderBun("stores the minted key as a non-expiring credential", async () => {
 		const calls: string[] = [];
 		const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
 			const url = String(input);
 			calls.push(url);
 			const body = url.includes("oauth/token")
-				? { code: 0, data: { zai: { access_token: "oauth-access" }, user: { email: "a@b.c", id: "u1" } } }
+				? { zai: { access_token: "oauth-access" }, user: { email: "a@b.c", id: "u1" } }
 				: url.includes("auth/z/login")
 					? { code: 200, data: { access_token: "biz" } }
 					: url.includes("getCustomerInfo")
@@ -53,7 +57,7 @@ describe("zai sign-in", () => {
 						: url.includes("/api_keys/copy/")
 							? { code: 200, data: { secretKey: "SECRET" } }
 							: url.endsWith("/api_keys")
-								? { code: 200, data: [{ name: "omp-slim", apiKey: "KEY" }] }
+								? { code: 200, data: [{ name: "oh-my-pi", apiKey: "KEY" }] }
 								: { code: 200, data: {} };
 			return new Response(JSON.stringify(body), { status: 200 });
 		});
