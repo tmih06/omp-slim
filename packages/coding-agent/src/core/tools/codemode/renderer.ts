@@ -8,11 +8,11 @@
  */
 
 import { Container, Spacer, Text } from "@earendil-works/pi-tui";
-import type { ToolDefinition } from "../../core/extensions/types.ts";
-import { getTextOutput, replaceTabs, startToolTimer, str, toolTimerText } from "../../core/tools/render-utils.ts";
-import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
-import { VisualLinePreview } from "../../modes/interactive/components/visual-truncate.ts";
-import { CodeHighlighter, type Theme } from "../../modes/interactive/theme/theme.ts";
+import type { ToolDefinition } from "../../extensions/types.ts";
+import { getTextOutput, replaceTabs, startToolTimer, str, toolTimerText } from "../render-utils.ts";
+import { keyHint } from "../../../modes/interactive/components/keybinding-hints.ts";
+import { VisualLinePreview } from "../../../modes/interactive/components/visual-truncate.ts";
+import { CodeHighlighter, type Theme } from "../../../modes/interactive/theme/theme.ts";
 import type { CodemodeNestedCall, CodemodeToolDetails } from "./tool.ts";
 
 const CODE_PREVIEW_LINES = 10;

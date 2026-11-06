@@ -1,3 +1,13 @@
+import { type CodemodeToolOptions, createCodemodeTool, createCodemodeToolDefinition } from "./codemode/tool.ts";
+
+export {
+	type CodemodeToolDetails,
+	type CodemodeToolOptions,
+	CODEMODE_TOOL_NAME,
+	createCodemodeTool,
+	createCodemodeToolDefinition,
+	readCodemodeSettings,
+} from "./codemode/tool.ts";
 export {
 	type BashOperations,
 	type BashSpawnContext,
@@ -92,7 +102,7 @@ import { createWriteTool, createWriteToolDefinition, type WriteToolOptions } fro
 
 export type Tool = AgentTool<any>;
 export type ToolDef = ToolDefinition<any, any>;
-export type ToolName = "read" | "bash" | "powershell" | "edit" | "write" | "grep" | "find" | "ls";
+export type ToolName = "read" | "bash" | "powershell" | "edit" | "write" | "grep" | "find" | "ls" | "codemode";
 export const allToolNames: Set<ToolName> = new Set([
 	"read",
 	"bash",
@@ -102,6 +112,7 @@ export const allToolNames: Set<ToolName> = new Set([
 	"grep",
 	"find",
 	"ls",
+	"codemode",
 ]);
 
 export interface ToolsOptions {
@@ -113,6 +124,7 @@ export interface ToolsOptions {
 	grep?: GrepToolOptions;
 	find?: FindToolOptions;
 	ls?: LsToolOptions;
+	codemode?: CodemodeToolOptions;
 }
 
 export function createToolDefinition(toolName: ToolName, cwd: string, options?: ToolsOptions): ToolDef {
@@ -133,6 +145,8 @@ export function createToolDefinition(toolName: ToolName, cwd: string, options?: 
 			return createFindToolDefinition(cwd, options?.find);
 		case "ls":
 			return createLsToolDefinition(cwd, options?.ls);
+		case "codemode":
+			return createCodemodeToolDefinition(options?.codemode);
 		default:
 			throw new Error(`Unknown tool name: ${toolName}`);
 	}
@@ -156,6 +170,8 @@ export function createTool(toolName: ToolName, cwd: string, options?: ToolsOptio
 			return createFindTool(cwd, options?.find);
 		case "ls":
 			return createLsTool(cwd, options?.ls);
+		case "codemode":
+			return createCodemodeTool([], options?.codemode);
 		default:
 			throw new Error(`Unknown tool name: ${toolName}`);
 	}
@@ -189,6 +205,7 @@ export function createAllToolDefinitions(cwd: string, options?: ToolsOptions): R
 		grep: createGrepToolDefinition(cwd, options?.grep),
 		find: createFindToolDefinition(cwd, options?.find),
 		ls: createLsToolDefinition(cwd, options?.ls),
+		codemode: createCodemodeToolDefinition(options?.codemode),
 	};
 }
 
@@ -212,6 +229,7 @@ export function createReadOnlyTools(cwd: string, options?: ToolsOptions): Tool[]
 
 export function createAllTools(cwd: string, options?: ToolsOptions): Record<ToolName, Tool> {
 	return {
+		codemode: createCodemodeTool([], options?.codemode),
 		read: createReadTool(cwd, options?.read),
 		bash: createBashTool(cwd, options?.bash),
 		powershell: createPowerShellTool(cwd, options?.powershell),

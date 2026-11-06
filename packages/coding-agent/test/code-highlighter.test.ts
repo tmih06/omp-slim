@@ -1,7 +1,7 @@
 import type { TUI } from "@earendil-works/pi-tui";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writeRenderers } from "../src/core/tools/renderers/write.ts";
-import { codemodeRenderers } from "../src/extensions/codemode/renderer.ts";
+import { codemodeRenderers } from "../src/core/tools/codemode/renderer.ts";
 import { ToolExecutionComponent } from "../src/modes/interactive/components/tool-execution.ts";
 import { CodeHighlighter, highlightCode, initTheme } from "../src/modes/interactive/theme/theme.ts";
 import * as syntaxHighlight from "../src/utils/syntax-highlight.ts";

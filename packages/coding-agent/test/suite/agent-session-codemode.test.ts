@@ -22,14 +22,13 @@ import {
 	createToolDefinitionFromAgentTool,
 	type TypeBoxAgentTool,
 } from "../../src/core/tools/tool-definition-wrapper.ts";
-import { readCodemodeStore } from "../../src/extensions/codemode/execute.ts";
-import { createCodemodeExtension } from "../../src/extensions/codemode/index.ts";
+import { readCodemodeStore } from "../../src/core/tools/codemode/execute.ts";
 import {
 	CODEMODE_DOCS_PATH,
 	CODEMODE_STORE_ENTRY_TYPE,
 	type CodemodeToolDetails,
 	createCodemodeTool,
-} from "../../src/extensions/codemode/tool.ts";
+} from "../../src/core/tools/codemode/tool.ts";
 import { createHarness, getToolResult, type Harness, type HarnessOptions } from "./harness.ts";
 
 const TINY_PNG_BASE64 =
@@ -135,7 +134,7 @@ describe("AgentSession codemode tool", () => {
 		};
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode"],
-			extensionFactories: [createCodemodeExtension(), registerTools, ...(extensionFactories ?? [])],
+			extensionFactories: [registerTools, ...(extensionFactories ?? [])],
 		});
 		harnesses.push(harness);
 		return harness;
@@ -501,7 +500,7 @@ describe("codemode options and store", () => {
 	async function setup() {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode"],
-			extensionFactories: [createCodemodeExtension()],
+			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		return harness;
@@ -612,7 +611,7 @@ describe("codemode options and store", () => {
 	it("resolves bash calls to structured results, also for non-zero exit codes", async () => {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode", "bash"],
-			extensionFactories: [createCodemodeExtension()],
+			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		const result = await run(
@@ -627,7 +626,7 @@ describe("codemode options and store", () => {
 	it("resolves read calls to text for text files and to image blocks that image() shows", async () => {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode", "read"],
-			extensionFactories: [createCodemodeExtension()],
+			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		writeFileSync(join(harness.tempDir, "notes.txt"), "hello");
@@ -754,7 +753,7 @@ describe("codemode models", () => {
 	async function setup() {
 		const harness = await createHarness({
 			initialActiveToolNames: ["codemode"],
-			extensionFactories: [createCodemodeExtension()],
+			extensionFactories: [],
 		});
 		harnesses.push(harness);
 		const observed: ClassifyObservation[] = [];

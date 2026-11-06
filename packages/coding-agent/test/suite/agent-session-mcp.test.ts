@@ -7,7 +7,6 @@ import { Type } from "typebox";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ExtensionAPI, ExtensionFactory } from "../../src/core/extensions/types.ts";
 import type { SessionManager } from "../../src/core/session-manager.ts";
-import { createCodemodeExtension } from "../../src/extensions/codemode/index.ts";
 import type { McpExposure, McpServerEntry } from "../../src/extensions/mcp/config.ts";
 import { createMcpExtension, MCP_SERVERS_SECTION } from "../../src/extensions/mcp/index.ts";
 import { createToolSearchExtension } from "../../src/extensions/tool-search/index.ts";
@@ -180,7 +179,6 @@ describe("AgentSession MCP integration", () => {
 			sessionManager,
 			extensionFactories: [
 				...extensionFactories,
-				createCodemodeExtension(),
 				...(withoutToolSearch ? [] : [createToolSearchExtension()]),
 				createMcpExtension({
 					loadConfig: () => ({ servers: [entry], errors: [], ...configOptions }),
@@ -709,7 +707,8 @@ return { docs, sameForAliases: aliases.every((alias) => JSON.stringify(alias) ==
 	});
 
 	it("does not activate another extension's tool named codemode", async () => {
-		// Registered first, so it wins over the codemode extension's codemode.
+		// An extension can override the built-in codemode tool, but MCP must not activate it
+		// unless the replacement declares that it reaches other tools.
 		const otherExec: ExtensionFactory = (pi) => {
 			pi.registerTool({
 				name: "codemode",
@@ -745,7 +744,6 @@ return { docs, sameForAliases: aliases.every((alias) => JSON.stringify(alias) ==
 		const harness = await createHarness({
 			initialActiveToolNames: [],
 			extensionFactories: [
-				createCodemodeExtension(),
 				createToolSearchExtension(),
 				createMcpExtension({
 					loadConfig: () => ({ servers: [entry], errors: [] }),
@@ -1041,7 +1039,6 @@ describe("AgentSession MCP servers registered by extensions", () => {
 			initialActiveToolNames: [],
 			extensionFactories: [
 				...(Array.isArray(plugins) ? plugins : [plugins]),
-				createCodemodeExtension(),
 				createMcpExtension({
 					loadConfig: () => ({ servers: configured, errors: [] }),
 					createTransport: (entry) => {

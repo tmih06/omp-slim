@@ -41,7 +41,10 @@ const bunBuiltinPlugin = {
 		// pi-utils' `exports` map (which has no JSON entry) to a relative import inside the package.
 		build.onResolve({ filter: /\.\.[\\/]package\.json$/ }, (args) => {
 			if (!args.importer.includes("@oh-my-pi/pi-utils")) return undefined;
-			return { path: join(repoRoot, "node_modules", "@oh-my-pi", "pi-utils", "package.json"), namespace: "omp-json" };
+			return {
+				path: join(repoRoot, "node_modules", "@oh-my-pi", "pi-utils", "package.json"),
+				namespace: "omp-json",
+			};
 		});
 		build.onLoad({ filter: /.*/, namespace: "omp-json" }, (args) => ({
 			contents: readFileSync(args.path, "utf8"),
@@ -159,7 +162,8 @@ function findContainingOutput(metafile, inputSuffix) {
 
 function outputBytes(metafiles) {
 	return metafiles.reduce(
-		(total, metafile) => total + Object.values(metafile.outputs).reduce((subtotal, output) => subtotal + output.bytes, 0),
+		(total, metafile) =>
+			total + Object.values(metafile.outputs).reduce((subtotal, output) => subtotal + output.bytes, 0),
 		0,
 	);
 }
@@ -169,7 +173,7 @@ for (const entry of [
 	join(codingAgentDistDir, "index.js"),
 	join(codingAgentDistDir, "rpc-entry.js"),
 	join(codingAgentDistDir, "utils", "image-resize-worker.js"),
-	join(codingAgentDistDir, "extensions", "codemode", "worker.js"),
+	join(codingAgentDistDir, "core", "tools", "codemode", "worker.js"),
 	join(aiDistDir, "api", "bedrock-converse-stream.js"),
 	join(aiDistDir, "auth", "oauth", "anthropic.js"),
 ]) {
@@ -194,7 +198,10 @@ const mainResult = await build({
 	splitting: true,
 });
 
-const bedrockLoaderOutput = findContainingOutput(mainResult.metafile, "packages/ai/dist/api/bedrock-converse-stream.lazy.js");
+const bedrockLoaderOutput = findContainingOutput(
+	mainResult.metafile,
+	"packages/ai/dist/api/bedrock-converse-stream.lazy.js",
+);
 const oauthLoaderOutput = findContainingOutput(mainResult.metafile, "packages/ai/dist/auth/oauth/load.js");
 const imageResizeOutput = findContainingOutput(mainResult.metafile, "packages/coding-agent/dist/utils/image-resize.js");
 const configOutput = findContainingOutput(mainResult.metafile, "packages/coding-agent/dist/config.js");
@@ -246,12 +253,14 @@ const codemodeWorkerResult = await build({
 	...commonBuildOptions(),
 	banner: undefined,
 	entryNames: "[name]",
-	entryPoints: { "codemode-worker": join(codingAgentDistDir, "extensions", "codemode", "worker.js") },
+	entryPoints: { "codemode-worker": join(codingAgentDistDir, "core", "tools", "codemode", "worker.js") },
 	outdir: dirname(bedrockLoaderOutput),
 	splitting: false,
 });
 for (const [outputPath, output] of Object.entries(codemodeWorkerResult.metafile.outputs)) {
-	const invalid = output.imports.filter((imported) => imported.kind !== "import-statement" || !isBuiltin(imported.path));
+	const invalid = output.imports.filter(
+		(imported) => imported.kind !== "import-statement" || !isBuiltin(imported.path),
+	);
 	if (invalid.length > 0) {
 		throw new Error(
 			`Codemode worker must only import Node builtins: ${invalid.map((imported) => imported.path).join(", ")}`,

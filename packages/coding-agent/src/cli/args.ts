@@ -281,7 +281,7 @@ export function printHelp(extensionFlags?: ExtensionFlag[]): void {
 					})
 					.join("\n")}\n`
 			: "";
-	console.log(`${chalk.bold(APP_NAME)} - AI coding assistant with read, bash, edit, write tools
+	console.log(`${chalk.bold(APP_NAME)} - AI coding assistant with read, bash, edit, write, codemode tools
 
 ${chalk.bold("Usage:")}
   ${APP_NAME} [options] [--] [@files...] [messages...]
@@ -402,8 +402,8 @@ ${chalk.bold("Examples:")}
   # Read-only mode (no file modifications possible)
   ${APP_NAME} --tools read,grep,find,ls -p "Review the code in src/"
 
-  # Add codemode to the default tools
-  ${APP_NAME} --tools +codemode
+  # Disable codemode while keeping the other default tools
+  ${APP_NAME} --tools -codemode
 
   # Codemode with only the tools of one MCP server
   ${APP_NAME} --tools read,bash,codemode,'mcp__radius__*'

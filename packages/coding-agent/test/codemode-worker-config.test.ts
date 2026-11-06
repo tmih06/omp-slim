@@ -5,7 +5,7 @@ describe("resolveCodemodeWorkerSpecifier", () => {
 	// Regression test for #10204.
 	test("uses a relative source entrypoint in Bun binaries", () => {
 		expect(resolveCodemodeWorkerSpecifier("bun-binary", "file:///B:/~BUN/root/config.js")).toBe(
-			"./src/extensions/codemode/worker.ts",
+			"./src/core/tools/codemode/worker.ts",
 		);
 	});
 
