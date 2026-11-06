@@ -203,7 +203,7 @@ Each server tool is registered as `mcp__<server>__<tool>`. The server's `exposur
 
 Servers with `codemode` or `deferred` tools are listed in the `mcp_servers` section of the system prompt, with how their tools are reached and one line from the configured `description` or, once connected, from the server instructions. Pi updates the section when a prompt starts, after waiting for servers with `direct` tools. When it changed, for example because a server connected and its summary became available, Pi appends the new section to the conversation instead of changing tool declarations, so earlier messages stay cached. `describeNamespace()` and the `namespace` option of `searchTools()` accept `mcp__dev-radius`, `mcp__dev_radius`, `dev-radius`, or `dev_radius`.
 
-Pi activates `codemode` when a server with `codemode` exposure connects. It activates `tool_search` for a server with `deferred` exposure. To make the model see a tool without searching, give it `direct` exposure with `toolExposure`.
+`codemode` is a built-in tool, active by default. If it was turned off, Pi activates it when a server with `codemode` exposure connects, unless `autoEnableCodemode` is false. It activates `tool_search` for a server with `deferred` exposure. To make the model see a tool without searching, give it `direct` exposure with `toolExposure`.
 
 `toolExposure` overrides the server exposure for individual tools. Keys are exact server tool names or patterns where `*` matches any characters. Exact names win over patterns; among patterns, the first match wins. A server with `hidden` exposure can expose only selected tools:
 
@@ -229,7 +229,7 @@ Tools with `codemode` or `deferred` exposure can be reached through either indir
 
 `--tools` does not remove MCP tools unless one of its entries starts with `mcp__`; `pi --tools read,codemode,'mcp__radius__*'` keeps only the tools of `radius`. `--exclude-tools` accepts the same patterns, and `--no-mcp` disables MCP for one run (see [Tools](cli.md#mcp-tools)).
 
-To keep `codemode` active without MCP servers, add `"defaultTools": ["+codemode"]` to [settings](settings.md#tools). To prevent automatic codemode activation, set `"autoEnableCodemode": false` beside `mcpServers`. A project value overrides the user-level value. Pi warns once when neither `codemode` nor `tool_search` is active and non-direct tools cannot be called.
+`codemode` is active by default, with or without MCP servers. To turn it off, add `"defaultTools": ["-codemode"]` to [settings](settings.md#tools). To also prevent the MCP extension from activating it when a server with `codemode` exposure connects, set `"autoEnableCodemode": false` beside `mcpServers`. A project value overrides the user-level value. Pi warns once when neither `codemode` nor `tool_search` is active and non-direct tools cannot be called.
 
 Text results over 20 KB reach the model with their middle removed around a `…N chars truncated…` marker. The full text is saved to a temporary file named in the result. Codemode scripts receive the complete result and can reduce it before returning output to the model.
 
@@ -271,4 +271,4 @@ An extension that registers `codemode` or `tool_search` similarly replaces the b
 
 ### Use MCP from the SDK
 
-SDK sessions do not load built-in extensions. Add the MCP extension, the codemode extension for `codemode` servers, and the tool-search extension for `deferred` servers to the resource loader. See [Codemode and MCP](sdk.md#codemode-mcp).
+SDK sessions do not load built-in extensions, but they do include the built-in `codemode` tool, so `codemode` servers work without extra setup. Add the MCP extension, and the tool-search extension for `deferred` servers, to the resource loader. See [Codemode and MCP](sdk.md#codemode-mcp).

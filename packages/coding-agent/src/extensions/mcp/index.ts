@@ -41,7 +41,7 @@ import type {
 import type { ModelRegistry } from "../../core/model-registry.ts";
 import { sliceHead } from "../../core/tools/truncate.ts";
 import { openBrowser } from "../../utils/open-browser.ts";
-import { CODEMODE_TOOL_NAME } from "../codemode/tool.ts";
+import { CODEMODE_TOOL_NAME } from "../../core/tools/codemode/tool.ts";
 import { TOOL_SEARCH_TOOL_NAME } from "../tool-search/tool.ts";
 import {
 	getMcpToolExposure,

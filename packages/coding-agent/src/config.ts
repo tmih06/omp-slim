@@ -529,7 +529,7 @@ export function resolveCodemodeWorkerSpecifier(
 	// Bun embeds explicit source entrypoints, but on Windows Bun 1.3 cannot map an absolute
 	// B:\~BUN URL back to one. A relative string with the original source extension works on
 	// every Bun platform.
-	if (runtime === "bun-binary") return "./src/extensions/codemode/worker.ts";
+	if (runtime === "bun-binary") return "./src/core/tools/codemode/worker.ts";
 	if (runtime === "bundled-node") return new URL("./codemode-worker.js", moduleUrl);
 	return undefined;
 }

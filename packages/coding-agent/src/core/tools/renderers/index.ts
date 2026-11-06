@@ -8,6 +8,7 @@
 
 import type { ToolRenderers } from "../../extensions/types.ts";
 import type { ToolName } from "../index.ts";
+import { codemodeRenderers } from "../codemode/renderer.ts";
 import { createShellRenderers } from "./bash.ts";
 import { editRenderers } from "./edit.ts";
 import { findRenderers } from "./find.ts";
@@ -18,6 +19,7 @@ import { writeRenderers } from "./write.ts";
 
 export type { ToolRenderers };
 
+export { codemodeRenderers } from "../codemode/renderer.ts";
 export {
 	createShellRenderers,
 	editRenderers,
@@ -31,6 +33,7 @@ export {
 /** Renderers for every built-in tool, keyed by tool name. */
 export function createAllToolRenderers(): Record<ToolName, ToolRenderers> {
 	return {
+		codemode: codemodeRenderers,
 		read: readRenderers,
 		bash: createShellRenderers("$"),
 		powershell: createShellRenderers("PS>"),

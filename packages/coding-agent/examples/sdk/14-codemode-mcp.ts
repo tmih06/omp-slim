@@ -1,18 +1,17 @@
 /**
  * Codemode, Tool Search, and MCP
  *
- * The CLI loads `codemode`, `tool_search`, and MCP as built-in extensions. SDK sessions add
- * them to the resource loader's extension factories.
+ * `codemode` is a built-in tool, so SDK sessions have it without any extension factory, like the
+ * CLI. It is active by default and stays available when extensions are disabled.
  *
- * `codemode` and `tool_search` are registered inactive. Enable them through the `defaultTools` setting
- * (`tools` would also restrict the session to the named tools, which hides MCP tools), or let the
- * MCP extension activate them: `codemode` for servers with `codemode` exposure, `tool_search` for
- * servers with `deferred` exposure.
+ * The CLI loads `tool_search` and MCP as built-in extensions. SDK sessions add them to the resource
+ * loader's extension factories. `tool_search` is registered inactive: enable it through the
+ * `defaultTools` setting (`tools` would also restrict the session to the named tools, which hides
+ * MCP tools), or let the MCP extension activate it for servers with `deferred` exposure.
  */
 
 import {
 	createAgentSession,
-	createCodemodeExtension,
 	createMcpExtension,
 	createToolSearchExtension,
 	DefaultResourceLoader,
@@ -27,7 +26,6 @@ const resourceLoader = new DefaultResourceLoader({
 	cwd,
 	agentDir: getAgentDir(),
 	extensionFactories: [
-		createCodemodeExtension({ mode: "on" }),
 		createToolSearchExtension(),
 		// Reads mcp.json from the agent directory and the trusted project, like the CLI.
 		createMcpExtension(),
@@ -37,7 +35,7 @@ await resourceLoader.reload();
 
 const settingsManager = SettingsManager.create(cwd);
 // `+name` adds to the configured default tools instead of replacing them.
-settingsManager.applyOverrides({ defaultTools: ["+codemode", "+tool_search"] });
+settingsManager.applyOverrides({ defaultTools: ["+tool_search"] });
 
 const { session } = await createAgentSession({
 	resourceLoader,

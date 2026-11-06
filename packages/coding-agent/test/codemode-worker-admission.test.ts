@@ -1,7 +1,7 @@
 import { Worker } from "node:worker_threads";
 import * as codemode from "@earendil-works/pi-codemode";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { executeCodemode } from "../src/extensions/codemode/execute.ts";
+import { executeCodemode } from "../src/core/tools/codemode/execute.ts";
 
 const terminate = Worker.prototype.terminate;
 const terminations = new Map<Worker, (code: number) => void>();

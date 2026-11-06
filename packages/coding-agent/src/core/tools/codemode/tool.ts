@@ -27,16 +27,31 @@ import type { CodemodeJsonSchema, CodemodeTool } from "@earendil-works/pi-codemo
 import { renderToolOutputType, renderToolSample, toCodemodeIdentifier } from "@earendil-works/pi-codemode/declarations";
 import { CODEMODE_SOURCE_GRAMMAR } from "@earendil-works/pi-codemode/source";
 import { type Static, Type } from "typebox";
-import { getDocsPath } from "../../config.ts";
-import type { ToolDefinition, ToolLoadout, ToolLoadoutChanges, ToolNamespace } from "../../core/extensions/types.ts";
-import type { ModelRegistry } from "../../core/model-registry.ts";
-import { SETTINGS_DEFAULTS } from "../../core/settings-defaults.ts";
-import type { CodemodeMode } from "../../core/settings-manager.ts";
-import { type TypeBoxAgentTool, wrapToolDefinition } from "../../core/tools/tool-definition-wrapper.ts";
+import { getDocsPath } from "../../../config.ts";
+import type { ToolDefinition, ToolLoadout, ToolLoadoutChanges, ToolNamespace } from "../../extensions/types.ts";
+import type { ModelRegistry } from "../../model-registry.ts";
+import { SETTINGS_DEFAULTS } from "../../settings-defaults.ts";
+import type { CodemodeMode } from "../../settings-manager.ts";
+import { type TypeBoxAgentTool, wrapToolDefinition } from "../tool-definition-wrapper.ts";
 import { loadCodemodeExecutor } from "./execute.lazy.ts";
 import { codemodeRenderers } from "./renderer.ts";
 
 export const CODEMODE_TOOL_NAME = "codemode";
+
+/**
+ * Read the `codemode` settings from a session's settings object. Named outside the definition so the
+ * built-in tool resolves mode and budget per call, like the extension did.
+ */
+export function readCodemodeSettings(settings: { codemode?: { mode?: string; inlineBudget?: unknown } }): {
+	mode: CodemodeMode;
+	inlineBudget: number | undefined;
+} {
+	const budget = settings.codemode?.inlineBudget;
+	return {
+		mode: settings.codemode?.mode === "only" ? "only" : SETTINGS_DEFAULTS.codemode.mode,
+		inlineBudget: typeof budget === "number" && Number.isFinite(budget) && budget >= 0 ? budget : undefined,
+	};
+}
 
 /** Custom entry type holding one script's `store()` writes: {@link CodemodeStoreEntryData}. */
 export const CODEMODE_STORE_ENTRY_TYPE = "codemode-store";

@@ -24,13 +24,17 @@ import {
 	renderToolSample,
 	toCodemodeIdentifier,
 } from "@earendil-works/pi-codemode";
-import { getCodemodeWorkerSpecifier, getQuickJSWasmPath } from "../../config.ts";
-import type { ExtensionToolContext, ToolNamespace } from "../../core/extensions/types.ts";
-import type { SessionEntry } from "../../core/session-manager.ts";
-import { formatSize, sliceHead, sliceTail } from "../../core/tools/truncate.ts";
-import { combineUsage } from "../../core/usage-totals.ts";
-import { writeOutputFile } from "../../utils/output-files.ts";
-import { Bm25Ranker, createToolSearchDocument, DEFAULT_TOOL_SEARCH_LIMIT } from "../tool-search/tool.ts";
+import { getCodemodeWorkerSpecifier, getQuickJSWasmPath } from "../../../config.ts";
+import type { ExtensionToolContext, ToolNamespace } from "../../extensions/types.ts";
+import type { SessionEntry } from "../../session-manager.ts";
+import { formatSize, sliceHead, sliceTail } from "../truncate.ts";
+import { combineUsage } from "../../usage-totals.ts";
+import { writeOutputFile } from "../../../utils/output-files.ts";
+import {
+	Bm25Ranker,
+	createToolSearchDocument,
+	DEFAULT_TOOL_SEARCH_LIMIT,
+} from "../../../extensions/tool-search/tool.ts";
 import {
 	CODEMODE_DOCS_PATH,
 	CODEMODE_STORE_ENTRY_TYPE,

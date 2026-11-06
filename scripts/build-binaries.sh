@@ -127,7 +127,7 @@ for platform in "${PLATFORMS[@]}"; do
     # Disable cwd bunfig.toml autoload so project preload scripts cannot crash the
     # standalone binary before pi starts (see #7684). Disable cwd .env autoload so
     # project env files do not leak into pi's environment (see #10473).
-    bun build --compile --minify --production --no-compile-autoload-bunfig --no-compile-autoload-dotenv --target="$bun_target" ./dist/bun/cli.js ./src/utils/image-resize-worker.ts ./src/extensions/codemode/worker.ts --outfile "$OUTPUT_DIR/$platform/omp-slim"
+    bun build --compile --minify --production --no-compile-autoload-bunfig --no-compile-autoload-dotenv --target="$bun_target" ./dist/bun/cli.js ./src/utils/image-resize-worker.ts ./src/core/tools/codemode/worker.ts --outfile "$OUTPUT_DIR/$platform/omp-slim"
 done
 
 echo "==> Creating release archives..."

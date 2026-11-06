@@ -129,7 +129,7 @@ See [Settings](settings.md#tools) for configuring the default tool selection.
 - `-nt`, `--no-tools`<br>
   Starts with all built-in, extension, custom, and MCP tools disabled.
 
-Default enabled tools are `read`, `bash`, `edit`, and `write`, unless `defaultTools` changes them. `--tools` with plain names replaces the whole selection, so name every tool you want. Like `defaultTools`, it also accepts a list of only `+name` and `-name` entries, which adds tools to or removes them from the default selection: `pi --tools +codemode,-write` keeps the other default tools, enables `codemode`, and disables `write`. These entries take exact tool names, not `*` patterns; use `--exclude-tools` to disable tools by pattern. Plain names and `+name`/`-name` entries cannot be mixed. `/reload` enables tools newly added to `defaultTools`, but a tool removed with `-name` stays removed.
+Default enabled tools are `read`, `bash`, `edit`, `write`, and `codemode`, unless `defaultTools` changes them. `--tools` with plain names replaces the whole selection, so name every tool you want. Like `defaultTools`, it also accepts a list of only `+name` and `-name` entries, which adds tools to or removes them from the default selection: `pi --tools +grep,-write` keeps the other default tools, enables `grep`, and disables `write`. These entries take exact tool names, not `*` patterns; use `--exclude-tools` to disable tools by pattern. Plain names and `+name`/`-name` entries cannot be mixed. `/reload` enables tools newly added to `defaultTools`, but a tool removed with `-name` stays removed.
 
 <a id="mcp-tools"></a>
 
@@ -150,28 +150,30 @@ The MCP resource tools (`list_mcp_resources`, `list_mcp_resource_templates`, `re
 | `grep` | Search file contents |
 | `find` | Find paths using glob patterns |
 | `ls` | List directory contents |
+| `codemode` | Run JavaScript that calls the other tools, for example in parallel with `Promise.allSettled`; only the script's output reaches the model |
 
-Built-in extensions add two more tools. They are off by default; the MCP extension turns them on when an MCP server needs them (see [MCP](mcp.md#control-tool-exposure)). To enable them yourself, name them in `--tools` or `defaultTools`.
+Built-in extensions add one more tool. It is off by default; the MCP extension turns it on when an MCP server needs it (see [MCP](mcp.md#control-tool-exposure)). To enable it yourself, name it in `--tools` or `defaultTools`.
 
 | Built-in extension | Purpose |
 |---|---|
-| `codemode` | Run JavaScript that calls the other tools, for example in parallel with `Promise.allSettled`; only the script's output reaches the model |
 | `tool_search` | Search tools that are not declared to the model (`codemode` and `deferred` exposure, such as MCP tools) and declare the matches for the next call |
 
-### Enable codemode
+<a id="enable-codemode"></a>
 
-To turn on `codemode` for every session, add it to the default tools in `~/.pi/agent/settings.json` or a project's `.pi/settings.json`:
+### Codemode
+
+`codemode` is a built-in tool, not an extension, so it is available with `--no-extensions` and is part of the default tool selection. To turn it off for every session, remove it from the default tools in `~/.pi/agent/settings.json` or a project's `.pi/settings.json`:
 
 ```json
 {
-  "defaultTools": ["+codemode"]
+  "defaultTools": ["-codemode"]
 }
 ```
 
-This keeps `read`, `bash`, `edit`, and `write` and adds `codemode`. For one invocation, add it with `--tools`:
+This keeps `read`, `bash`, `edit`, and `write` and removes `codemode`. For one invocation, remove it with `--tools`:
 
 ```sh
-pi --tools +codemode
+pi --tools -codemode
 ```
 
 Codemode is useful without MCP: scripts can run several tool calls in parallel, filter large output before it reaches the model, call classifier models such as TypeSafe's Jev through `models.classify()` (see [Classifier models](models.md#use-classifier-models)), and generate images through `models.generateImages()` (see [Image models](models.md#use-image-models)).
@@ -197,7 +199,7 @@ See [Configuration](configuration.md) for conventional directories and project t
 - `-e`, `--extension <path>`<br>
   Loads an extension file or directory, or a built-in extension such as `builtin:mcp`, and is repeatable.
 - `-ne`, `--no-extensions`<br>
-  Disables discovered, configured, and built-in extensions. Explicit `-e` paths still load, so `pi -ne -e builtin:mcp` keeps only the built-in MCP support.
+  Disables discovered, configured, and built-in extensions. Explicit `-e` paths still load, so `pi -ne -e builtin:mcp` keeps only the built-in MCP support. Built-in tools such as `codemode` are unaffected, so codemode scripts still run.
 - `--no-mcp`<br>
   Disables the built-in MCP support for this run: no servers connect, and there are no MCP tools or `/mcp`. It does not affect an extension that replaces the built-in MCP support.
 - `--skill <path>`<br>

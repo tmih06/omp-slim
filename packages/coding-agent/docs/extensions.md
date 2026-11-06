@@ -2357,7 +2357,7 @@ pi.registerTool({
 
 ### Overriding Built-in Tools
 
-Extensions can override built-in tools (`read`, `bash`, `powershell`, `edit`, `write`, `grep`, `find`, `ls`) by registering a tool with the same name. The extension tool replaces the built-in without a warning.
+Extensions can override built-in tools (`read`, `bash`, `powershell`, `edit`, `write`, `grep`, `find`, `ls`, `codemode`) by registering a tool with the same name. The extension tool replaces the built-in without a warning.
 
 ```bash
 # Extension's read tool replaces built-in read

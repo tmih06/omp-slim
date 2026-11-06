@@ -3,7 +3,6 @@ import type { ToolResultMessage } from "@earendil-works/pi-ai/compat";
 import { Type } from "typebox";
 import { afterEach, describe, expect, it } from "vitest";
 import type { ExtensionAPI } from "../../src/core/extensions/types.ts";
-import { createCodemodeExtension } from "../../src/extensions/codemode/index.ts";
 import { createToolSearchExtension } from "../../src/extensions/tool-search/index.ts";
 import { createHarness, type Harness } from "./harness.ts";
 
@@ -112,14 +111,15 @@ describe("AgentSession tool orchestration", () => {
 		expect(persisted?.type === "message" && persisted.message).toMatchObject({ nestedCalls: result.nestedCalls });
 	});
 
-	it("registers codemode and tool_search inactive until they are named", async () => {
-		const extensionFactories = [createCodemodeExtension(), createToolSearchExtension()];
+	it("activates codemode by default and tool_search only when it is named", async () => {
+		const extensionFactories = [createToolSearchExtension()];
 		const plain = await createHarness({ extensionFactories });
 		harnesses.push(plain);
 		expect(plain.session.getAllTools().map((tool) => tool.name)).toEqual(
 			expect.arrayContaining(["codemode", "tool_search"]),
 		);
-		expect(plain.session.getActiveToolNames()).toEqual(["read", "bash", "edit", "write"]);
+		// codemode ships active; tool_search stays registered but inactive.
+		expect(plain.session.getActiveToolNames()).toEqual(["read", "bash", "edit", "write", "codemode"]);
 
 		// --tools and the defaultTools setting name them explicitly.
 		const allowed = await createHarness({ allowedToolNames: ["read", "codemode"], extensionFactories });

@@ -21,7 +21,7 @@ The runtime example shows how to build a recreate function that closes over proc
 | `11-sessions.ts` | In-memory, persistent, continue, list sessions |
 | `12-full-control.ts` | Replace everything, no discovery |
 | `13-session-runtime.ts` | Manage runtime-backed session replacement |
-| `14-codemode-mcp.ts` | Add the `codemode`, `tool_search`, and MCP extensions |
+| `14-codemode-mcp.ts` | Built-in `codemode` with the `tool_search` and MCP extensions |
 
 ## Running
 
@@ -111,7 +111,7 @@ await session.prompt("Hello");
 | `agentDir` | `~/.pi/agent` | Config directory |
 | `model` | From settings/first available | Model to use |
 | `thinkingLevel` | From settings/"off" | off, low, medium, high |
-| `tools` | `["read", "bash", "edit", "write"]` built-ins | Allowlist tool names across built-in, extension, and custom tools |
+| `tools` | `["read", "bash", "edit", "write", "codemode"]` built-ins | Allowlist tool names across built-in, extension, and custom tools |
 | `customTools` | `[]` | Additional tool definitions |
 | `resourceLoader` | DefaultResourceLoader | Resource loader for extensions, skills, prompts, themes, and context files |
 | `sessionManager` | `SessionManager.create(cwd)` | Persistence |

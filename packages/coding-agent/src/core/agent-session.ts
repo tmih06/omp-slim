@@ -150,7 +150,7 @@ import {
 	normalizeBuildSystemPromptOptions,
 } from "./system-prompt.ts";
 import { type BashOperations, createLocalBashOperations } from "./tools/bash.ts";
-import { createAllToolDefinitions } from "./tools/index.ts";
+import { createAllToolDefinitions, readCodemodeSettings } from "./tools/index.ts";
 import { createToolDefinitionFromAgentTool } from "./tools/tool-definition-wrapper.ts";
 import { addUsageToTotals, combineUsage, createUsageTotals } from "./usage-totals.ts";
 import {
@@ -288,7 +288,7 @@ export interface AgentSessionConfig {
 	modelRuntime: ModelRuntime;
 	/** Keeps the prompt cache entry of the last session request warm. */
 	cacheWarmer?: Pick<CacheWarmer, "cancel" | "status" | "onAgentSettled" | "onModeChanged" | "onWarmed">;
-	/** Initial active built-in tool names. Default: [read, bash, edit, write] */
+	/** Initial active built-in tool names. Default: [read, bash, edit, write, codemode] */
 	initialActiveToolNames?: string[];
 	/**
 	 * Whether the initial tools come from the `defaultTools` setting. When true, a resumed session
@@ -3545,13 +3545,7 @@ export class AgentSession {
 						});
 					});
 				},
-				appendEntry: (customType, data) => {
-					const entryId = this.sessionManager.appendCustomEntry(customType, data);
-					const entry = this.sessionManager.getEntry(entryId);
-					if (entry) {
-						this._emit({ type: "entry_appended", entry });
-					}
-				},
+				appendEntry: (customType, data) => this._appendCustomEntry(customType, data),
 				setSessionName: (name) => {
 					this.setSessionName(name);
 				},
@@ -3634,7 +3628,10 @@ export class AgentSession {
 		);
 	}
 
-	private _refreshToolRegistry(options?: { activeToolNames?: string[]; includeAllExtensionTools?: boolean }): void {
+	private _refreshToolRegistry(options?: {
+		activeToolNames?: readonly string[];
+		includeAllExtensionTools?: boolean;
+	}): void {
 		// Tools that were already activated on registration. A tool whose exposure changes to
 		// `direct` or `model-only` (for example from `hidden`) is activated like a new tool.
 		const previousActivatedOnRegistration = new Set(
@@ -3745,6 +3742,12 @@ export class AgentSession {
 		return this._isDeclarable(name) && this._toolDefinitions.get(name)?.definition.defaultActive !== false;
 	}
 
+	private _appendCustomEntry(customType: string, data: unknown): void {
+		const entryId = this.sessionManager.appendCustomEntry(customType, data);
+		const entry = this.sessionManager.getEntry(entryId);
+		if (entry) this._emit({ type: "entry_appended", entry });
+	}
+
 	private _buildRuntime(options: {
 		activeToolNames?: string[];
 		flagValues?: Map<string, boolean | string>;
@@ -3763,6 +3766,14 @@ export class AgentSession {
 			: createAllToolDefinitions(this._cwd, {
 					read: { autoResizeImages },
 					bash: { commandPrefix: shellCommandPrefix, shellPath },
+					codemode: {
+						models: true,
+						getToolNamespace: (name) => this._toolDefinitions.get(name)?.definition.namespace,
+						getToolGuidelines: () => this._toolPromptGuidelines,
+						getMode: () => readCodemodeSettings(this.settingsManager.getSettings()).mode,
+						getInlineBudget: () => readCodemodeSettings(this.settingsManager.getSettings()).inlineBudget,
+						appendEntry: (customType, data) => this._appendCustomEntry(customType, data),
+					},
 				});
 
 		this._baseToolDefinitions = new Map(
@@ -3791,7 +3802,7 @@ export class AgentSession {
 
 		const defaultActiveToolNames = this._baseToolsOverride
 			? Object.keys(this._baseToolsOverride)
-			: ["read", "bash", "edit", "write"];
+			: DEFAULT_TOOL_NAMES;
 		const baseActiveToolNames = options.activeToolNames ?? defaultActiveToolNames;
 		this._refreshToolRegistry({
 			activeToolNames: baseActiveToolNames,
