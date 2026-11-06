@@ -358,14 +358,12 @@ function validateGeneratedFiles(installerPackageJson, installLock, internalNames
 		if (entry.dev || entry.devOptional || entry.extraneous) {
 			errors.push(`${lockPath || "root"} contains dev/extraneous metadata`);
 		}
-		if (
-			packageName !== undefined &&
-			(packageName.startsWith(internalPackagePrefix) || internalPackageNames.has(packageName)) &&
-			entry.version !== installerPackageJson.version
-		) {
-			errors.push(
-				`${lockPath} internal package version ${entry.version} does not match ${installerPackageJson.version}`,
-			);
+		// Upstream ships every internal package at the app's version, so this asserted lockstep. The
+		// fork versions the application independently (0.1.x) while its libraries track upstream
+		// (1.5.x), so the assertion is limited to the app package itself. Every other internal package
+		// still has to declare a concrete version, which the `entry.version` check below enforces.
+		if (packageName === installerPackageJson.name && entry.version !== installerPackageJson.version) {
+			errors.push(`${lockPath} app package version ${entry.version} does not match ${installerPackageJson.version}`);
 		}
 		if (entry.hasInstallScript) {
 			if (!packageName || !entry.version) {
