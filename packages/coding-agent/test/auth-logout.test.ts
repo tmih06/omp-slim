@@ -37,7 +37,7 @@ describe(`${APP_NAME} auth logout`, () => {
 		for (const args of [[], ["--api-key"], ["radius", "extra"]]) {
 			errors.length = 0;
 			expect(await run(args)).toBe(1);
-			expect(errors).toEqual([`Usage: ${APP_NAME} auth logout <provider>`]);
+			expect(errors).toEqual([`Usage: ${APP_NAME} auth logout <provider> [--account <key>]`]);
 		}
 	});
 
@@ -96,5 +96,72 @@ describe(`${APP_NAME} auth logout`, () => {
 		const { errors, run } = await setup({ radius: oauthCredential });
 		expect(await run(["nope"])).toBe(1);
 		expect(errors).toEqual(['Unknown provider "nope".', "Stored credentials: radius"]);
+	});
+});
+
+describe(`${APP_NAME} auth logout --account`, () => {
+	const twoAccounts = {
+		type: "oauth" as const,
+		access: "access-a",
+		refresh: "refresh-a",
+		expires: Date.now() + 3_600_000,
+		accountId: "acct-a",
+	};
+
+	async function setupWithAccounts() {
+		const credentials = AuthStorage.inMemory({ radius: twoAccounts });
+		const modelRuntime = await ModelRuntime.create({
+			credentials,
+			modelsPath: null,
+			modelsStore: new InMemoryModelsStore(),
+			allowModelNetwork: false,
+		});
+		// The in-memory store is single-account; layer the multi-account capability the SQLite store has.
+		const saved = new Map<string, Credential>([["acct-a", twoAccounts]]);
+		Object.assign(modelRuntime, {
+			listCredentialAccounts: async () =>
+				[...saved].map(([accountKey, _credential]) => ({
+					providerId: "radius",
+					type: "oauth" as const,
+					accountKey,
+					active: accountKey === "acct-a",
+				})),
+			deleteCredentialAccount: async (_providerId: string, accountKey: string) => saved.delete(accountKey),
+		});
+		const lines: string[] = [];
+		const errors: string[] = [];
+		const run = (args: string[]) =>
+			runAuthLogout(args, {
+				modelRuntime,
+				terminal: { write: (line) => lines.push(line), error: (line) => errors.push(line) },
+				signal: new AbortController().signal,
+			});
+		return { saved, lines, errors, run };
+	}
+
+	test("removes only the named account and reports the remainder", async () => {
+		const { saved, lines, run } = await setupWithAccounts();
+		saved.set("acct-b", { ...twoAccounts, accountId: "acct-b" });
+		expect(await run(["radius", "--account", "acct-b"])).toBe(0);
+		expect(lines).toEqual(['Removed account "acct-b" for Radius. 1 remaining.']);
+		expect([...saved.keys()]).toEqual(["acct-a"]);
+	});
+
+	test("reports when no accounts remain", async () => {
+		const { lines, run } = await setupWithAccounts();
+		expect(await run(["radius", "--account", "acct-a"])).toBe(0);
+		expect(lines).toEqual(['Removed account "acct-a" for Radius. No accounts remain for it.']);
+	});
+
+	test("rejects an unknown account and lists the available ones", async () => {
+		const { errors, run } = await setupWithAccounts();
+		expect(await run(["radius", "--account", "nope"])).toBe(1);
+		expect(errors).toEqual(['No stored account "nope" for Radius.', "Stored accounts: acct-a"]);
+	});
+
+	test("requires a value after --account", async () => {
+		const { errors, run } = await setupWithAccounts();
+		expect(await run(["radius", "--account"])).toBe(1);
+		expect(errors).toEqual([`Usage: ${APP_NAME} auth logout <provider> [--account <key>]`]);
 	});
 });

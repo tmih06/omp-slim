@@ -12,16 +12,37 @@ export interface AuthLogoutOptions {
 	signal: AbortSignal;
 }
 
-const AUTH_LOGOUT_USAGE = `${APP_NAME} auth logout <provider>`;
+const AUTH_LOGOUT_USAGE = `${APP_NAME} auth logout <provider> [--account <key>]`;
 
 /**
  * Run `pi auth logout <provider>`: remove the credential `pi auth login` or /login stored, and return the exit code.
  * Environment variables and models.json config stay, as with /logout.
+ *
+ * With `--account <key>`, remove only that account and keep the provider's other accounts.
  */
 export async function runAuthLogout(args: string[], options: AuthLogoutOptions): Promise<number> {
 	const { modelRuntime, terminal, signal } = options;
-	const [providerRef, ...rest] = args;
-	if (providerRef === undefined || providerRef.startsWith("-") || rest.length > 0) {
+	let accountKey: string | undefined;
+	const positional: string[] = [];
+	for (let index = 0; index < args.length; index++) {
+		const arg = args[index];
+		if (arg === "--account") {
+			const value = args[++index];
+			if (!value) {
+				terminal.error(`Usage: ${AUTH_LOGOUT_USAGE}`);
+				return 1;
+			}
+			accountKey = value;
+			continue;
+		}
+		if (arg.startsWith("-")) {
+			terminal.error(`Usage: ${AUTH_LOGOUT_USAGE}`);
+			return 1;
+		}
+		positional.push(arg);
+	}
+	const [providerRef, ...rest] = positional;
+	if (providerRef === undefined || rest.length > 0) {
 		terminal.error(`Usage: ${AUTH_LOGOUT_USAGE}`);
 		return 1;
 	}
@@ -50,6 +71,10 @@ export async function runAuthLogout(args: string[], options: AuthLogoutOptions):
 		return 0;
 	}
 
+	if (accountKey !== undefined) {
+		return removeOneAccount(modelRuntime, terminal, signal, credential.providerId, providerName, accountKey);
+	}
+
 	try {
 		await modelRuntime.logout(credential.providerId, { signal });
 	} catch (error: unknown) {
@@ -67,6 +92,48 @@ export async function runAuthLogout(args: string[], options: AuthLogoutOptions):
 		credential.type === "oauth"
 			? `Logged out of ${providerName}.`
 			: `Removed stored API key for ${providerName}. Environment variables and models.json config are unchanged.`,
+	);
+	return 0;
+}
+
+/**
+ * Remove one stored account, keeping the provider's others. Falls back with an explicit message when
+ * the store has no multi-account support, so the user is not told "no such account" on a store whose
+ * only account is the provider itself.
+ */
+async function removeOneAccount(
+	modelRuntime: ModelRuntime,
+	terminal: AuthOutput,
+	signal: AbortSignal,
+	providerId: string,
+	providerName: string,
+	accountKey: string,
+): Promise<number> {
+	const accounts = await modelRuntime.listCredentialAccounts({ signal });
+	if (accounts.length === 0) {
+		terminal.error(
+			`This credential store does not support multiple accounts; use "${APP_NAME} auth logout ${providerId}".`,
+		);
+		return 1;
+	}
+
+	const removed = await modelRuntime.deleteCredentialAccount(providerId, accountKey, { signal });
+	if (!removed) {
+		terminal.error(`No stored account "${replaceControlCharacters(accountKey)}" for ${providerName}.`);
+		const available = accounts
+			.filter((account) => account.providerId === providerId)
+			.map((account) => account.accountKey ?? "<no identity>");
+		if (available.length > 0) terminal.error(`Stored accounts: ${available.join(", ")}`);
+		return 1;
+	}
+
+	const remaining = accounts.filter(
+		(account) => account.providerId === providerId && account.accountKey !== accountKey,
+	).length;
+	terminal.write(
+		remaining > 0
+			? `Removed account "${replaceControlCharacters(accountKey)}" for ${providerName}. ${remaining} remaining.`
+			: `Removed account "${replaceControlCharacters(accountKey)}" for ${providerName}. No accounts remain for it.`,
 	);
 	return 0;
 }
