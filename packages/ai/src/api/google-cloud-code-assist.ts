@@ -58,11 +58,14 @@ export const ANTIGRAVITY_SANDBOX_ENDPOINT = "https://daily-cloudcode-pa.sandbox.
 export const GEMINI_CLI_ENDPOINT = "https://cloudcode-pa.googleapis.com";
 
 /**
- * Provider-specific knobs OMP reads off `model.compat`. Our catalog does not model them, and they are
- * only consulted for Antigravity request shaping, so an empty object is the correct default rather
- * than a stub that pretends to carry data.
+ * Provider-specific knobs OMP reads off `model.compat`.
+ *
+ * `antigravityUsageLabel` must be a string. OMP defaults it to `String(isClaude)` and writes it into
+ * the request's `used_claude` label; an object there produces `used_claude: {}`, which the backend
+ * rejects with 403 "You do not have a valid license of this product". Verified by bisection: with the
+ * label omitted the same request answers 200.
  */
-const CLOUD_CODE_COMPAT = { antigravityUsageLabel: {}, antigravityWireProfiles: {} } as const;
+const CLOUD_CODE_COMPAT = { antigravityUsageLabel: "", antigravityWireProfiles: {} } as const;
 
 /**
  * Build the model object their transport expects.
@@ -86,7 +89,7 @@ function toCloudCodeModel(model: Model<Api>) {
 		input: model.input ?? ["text"],
 		cost: model.cost,
 		identity: { class: identityClass },
-		compat: CLOUD_CODE_COMPAT,
+		compat: { ...CLOUD_CODE_COMPAT, antigravityUsageLabel: String(identityClass === "anthropic") },
 		// Their `Model` requires provider-internal `compat` values our catalog does not model; the
 		// fields this adapter supplies are the only ones their transport reads for these providers.
 	};

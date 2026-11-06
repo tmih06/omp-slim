@@ -11,7 +11,7 @@
  */
 
 import type { Model } from "../types.ts";
-import { openAICompletionsApi } from "../api/openai-completions.lazy.ts";
+import { googleCloudCodeAssistApi } from "../api/google-cloud-code-assist.lazy.ts";
 import { envApiKeyAuth, lazyOAuth } from "../auth/helpers.ts";
 import { loadGoogleAntigravityOAuth, loadGoogleGeminiCliOAuth } from "../auth/oauth/load.ts";
 import { createProvider, type Provider } from "../models.ts";
@@ -31,6 +31,54 @@ type CloudCodeModel = Model<typeof CLOUD_CODE_API>;
  */
 const ANTIGRAVITY_BASELINE: CloudCodeModel[] = [
 	{
+		id: "gemini-3.8-flash-high",
+		name: "Gemini 3.8 Flash High",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-3.8-flash-medium",
+		name: "Gemini 3.8 Flash Medium",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-3.8-flash-low",
+		name: "Gemini 3.8 Flash Low",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-3.8-flash-tiered",
+		name: "Gemini 3.8 Flash Tiered",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
 		id: "gemini-3.1-pro",
 		name: "Gemini 3.1 Pro",
 		api: CLOUD_CODE_API,
@@ -38,6 +86,114 @@ const ANTIGRAVITY_BASELINE: CloudCodeModel[] = [
 		baseUrl: ANTIGRAVITY_ENDPOINT,
 		reasoning: true,
 		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-3-flash",
+		name: "Gemini 3 Flash",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-3.1-flash-lite",
+		name: "Gemini 3.1 Flash Lite",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-3.1-flash-image",
+		name: "Gemini 3.1 Flash Image",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: false,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-2.5-pro",
+		name: "Gemini 2.5 Pro",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-2.5-flash",
+		name: "Gemini 2.5 Flash",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gemini-2.5-flash-thinking",
+		name: "Gemini 2.5 Flash Thinking",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "claude-sonnet-4-6",
+		name: "Claude Sonnet 4.6",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "claude-opus-4-6-thinking",
+		name: "Claude Opus 4.6 Thinking",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 200_000,
+		maxTokens: 64_000,
+	},
+	{
+		id: "gpt-oss-120b-medium",
+		name: "GPT-OSS 120B Medium",
+		api: CLOUD_CODE_API,
+		provider: "google-antigravity",
+		baseUrl: ANTIGRAVITY_ENDPOINT,
+		reasoning: true,
+		input: ["text"],
 		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
 		contextWindow: 200_000,
 		maxTokens: 64_000,
@@ -75,9 +231,19 @@ async function discoverAntigravityModels(apiKey: string, signal: AbortSignal): P
 	}
 	if (!credential.token) return undefined;
 
+	// The endpoint gates on Antigravity's own User-Agent; a bare bearer token answers 403
+	// PERMISSION_DENIED. OMP computes that header (and refreshes the version it embeds), so it is
+	// imported rather than guessed. Variable specifier keeps OMP out of browser bundles.
+	const headersModule = (await import("@oh-my-pi/pi-catalog/wire/gemini-headers")) as {
+		getAntigravityHeaders: () => Record<string, string>;
+	};
 	const response = await fetch(`${ANTIGRAVITY_ENDPOINT}/v1internal:fetchAvailableModels`, {
 		method: "POST",
-		headers: { authorization: `Bearer ${credential.token}`, "content-type": "application/json" },
+		headers: {
+			...headersModule.getAntigravityHeaders(),
+			authorization: `Bearer ${credential.token}`,
+			"content-type": "application/json",
+		},
 		body: JSON.stringify({ project: credential.projectId }),
 		signal: AbortSignal.any([signal, AbortSignal.timeout(15_000)]),
 	}).catch(() => undefined);
@@ -126,7 +292,7 @@ export function googleAntigravityProvider(): Provider<typeof CLOUD_CODE_API> {
 			}),
 		},
 		models: ANTIGRAVITY_BASELINE,
-		api: openAICompletionsApi(),
+		api: googleCloudCodeAssistApi(),
 		// The roster replaces the baseline once known; a failed discovery keeps it.
 		fetchModels: async (context) => {
 			if (context.credential?.type !== "oauth" || !context.allowNetwork) return discovered ?? ANTIGRAVITY_BASELINE;
@@ -156,6 +322,6 @@ export function googleGeminiCliProvider(): Provider<typeof CLOUD_CODE_API> {
 			}),
 		},
 		models: GEMINI_CLI_BASELINE,
-		api: openAICompletionsApi(),
+		api: googleCloudCodeAssistApi(),
 	});
 }
