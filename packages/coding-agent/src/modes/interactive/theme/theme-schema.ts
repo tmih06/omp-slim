@@ -45,7 +45,11 @@ const ThemeColorsSchema = Type.Unsafe<ThemeColorValues<ThemeColorValue>>(
 	Type.Object(themeTokenProperties(THEME_TOKENS), {
 		description:
 			"Theme color definitions (scrollbar, thinkingMax, and search highlight colors are optional and use compatible fallbacks)",
-		additionalProperties: false,
+		// Themes are shared with OMP through ~/.pi/agent/themes, and OMP defines color tokens this
+		// theme engine does not render (`statusLine*`, `pythonMode`). Extra keys are validated as
+		// color values and then ignored, so one theme file works in both tools; rejecting them made
+		// every OMP theme unusable here and told the user to edit files OMP still needs.
+		additionalProperties: colorValue("Additional color token understood by another client"),
 	}),
 );
 

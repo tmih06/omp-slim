@@ -513,7 +513,12 @@ function splitThemeColors(colors: ResolvedThemeColorValues<string | number>): {
 	const fgColors = {} as Record<ThemeColor, string | number>;
 	const bgColors = {} as Record<ThemeBg, string | number>;
 	for (const [key, value] of Object.entries(colors)) {
-		if (THEME_TOKENS[key as ThemeToken].slot === "background") {
+		// Themes are shared with OMP, which defines color tokens this engine does not render
+		// (`statusLine*`, `pythonMode`). They validate so one file serves both tools, and are skipped
+		// here rather than indexed blindly, which would throw on their missing descriptor.
+		const descriptor = THEME_TOKENS[key as ThemeToken] as (typeof THEME_TOKENS)[ThemeToken] | undefined;
+		if (!descriptor) continue;
+		if (descriptor.slot === "background") {
 			bgColors[key as ThemeBg] = value;
 		} else {
 			fgColors[key as ThemeColor] = value;

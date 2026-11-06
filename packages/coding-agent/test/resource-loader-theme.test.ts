@@ -5,7 +5,7 @@ import { resetCapabilitiesCache, setCapabilityOverrides } from "@earendil-works/
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DefaultResourceLoader } from "../src/core/resource-loader.ts";
 import { SettingsManager } from "../src/core/settings-manager.ts";
-import { setThemeJsonValidator } from "../src/modes/interactive/theme/theme.ts";
+import { loadThemeFromPath, setThemeInstance, setThemeJsonValidator } from "../src/modes/interactive/theme/theme.ts";
 import { validateThemeJson } from "../src/modes/interactive/theme/theme-schema.ts";
 
 setThemeJsonValidator(validateThemeJson);
@@ -142,5 +142,76 @@ describe("DefaultResourceLoader theme color mode", () => {
 		writeFileSync(themePath, JSON.stringify(themeJson));
 		await loader.reload();
 		expect(loader.getThemes().diagnostics).toEqual(initialDiagnostics);
+	});
+});
+
+describe("themes shared with OMP", () => {
+	const tempDirs: string[] = [];
+	afterEach(() => {
+		for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+	});
+
+	/**
+	 * OMP defines color tokens this engine does not render (`statusLine*`, `pythonMode`) and writes them
+	 * into the same `~/.pi/agent/themes` directory. Rejecting unknown keys made every OMP theme
+	 * unusable here and told the user to strip tokens OMP still needs.
+	 */
+	function writeSharedTheme(colors: Record<string, string>): string {
+		const dir = mkdtempSync(join(tmpdir(), "omp-theme-"));
+		tempDirs.push(dir);
+		const themePath = join(dir, "shared.json");
+		writeFileSync(themePath, JSON.stringify({ name: "shared", colors }));
+		return themePath;
+	}
+
+	function minimalColors(): Record<string, string> {
+		// Start from a built-in theme so the required token set is whatever this engine requires.
+		const builtin = JSON.parse(
+			readFileSync(join(import.meta.dirname, "..", "src", "modes", "interactive", "theme", "dark.json"), "utf8"),
+		) as { colors: Record<string, string>; vars?: Record<string, string> };
+		// Resolve the built-in's variable references so the test theme is self-contained.
+		const resolved: Record<string, string> = {};
+		for (const [key, value] of Object.entries(builtin.colors)) {
+			resolved[key] = builtin.vars?.[value] ?? value;
+		}
+		return resolved;
+	}
+
+	it("accepts color tokens this engine does not render", () => {
+		const colors = minimalColors();
+		expect(() => validateThemeJson("shared", { name: "shared", colors })).not.toThrow();
+
+		// OMP-only tokens ride along without complaint.
+		expect(() =>
+			validateThemeJson("shared", {
+				name: "shared",
+				colors: { ...colors, statusLineBg: "#101010", pythonMode: "#00ff00" },
+			}),
+		).not.toThrow();
+	});
+
+	it("still rejects an unknown token that is not a color", () => {
+		// Tolerating extra keys must not turn into "any value passes".
+		expect(() =>
+			validateThemeJson("shared", { name: "shared", colors: { ...minimalColors(), broken: { nested: true } } }),
+		).toThrow();
+	});
+
+	it("renders a theme that carries foreign tokens", () => {
+		// Validation alone is not enough: the loader splits colors into fg/bg by looking up each key's
+		// descriptor, so an unknown key must be skipped there too or it throws at render time.
+		const theme = loadThemeFromPath(
+			writeSharedTheme({ ...minimalColors(), statusLineBg: "#101010", pythonMode: "#00ff00" }),
+		);
+		expect(theme.name).toBe("shared");
+		setThemeInstance(theme);
+		expect(theme.fg("accent", "x")).toContain("x");
+		expect(theme.bg("userMessageBg", "x")).toContain("x");
+	});
+
+	it("still requires the tokens this engine renders", () => {
+		expect(() => validateThemeJson("shared", { name: "shared", colors: { statusLineBg: "#101010" } })).toThrow(
+			/Missing required color tokens/u,
+		);
 	});
 });
