@@ -11,6 +11,7 @@ This fork currently contains Pi with these customizations:
 - `omp-slim` CLI identity.
 - Cache miss notices enabled by default.
 - A throughput line after each run in interactive mode, reporting tokens per second and the run's token totals.
+- Multi-account credentials in SQLite (`~/.pi/agent/agent.db`), several accounts per provider, with `auth accounts` and `auth use` to list and switch. An existing `auth.json` is imported once and renamed `auth.json.migrated`.
 - A minified, Bun-compiled executable build.
 - Bun-managed dependencies and workspace scripts, with Oxfmt formatting and Oxlint linting.
 - Linux and macOS build targets; no native Windows, Android, Nix, or p2 distribution.

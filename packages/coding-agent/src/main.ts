@@ -26,6 +26,7 @@ import {
 	printAuthCommandHelp,
 	validateAuthCommandArgs,
 } from "./cli/auth-command.ts";
+import { runAuthAccounts, runAuthUse } from "./cli/auth-accounts.ts";
 import { runAuthLogin } from "./cli/auth-login.ts";
 import { runAuthLogout } from "./cli/auth-logout.ts";
 import { createProcessLoginTerminal } from "./cli/auth-terminal.ts";
@@ -44,7 +45,7 @@ import {
 	createAgentSessionServices,
 } from "./core/agent-session-services.ts";
 import { formatNoModelsAvailableMessage } from "./core/auth-guidance.ts";
-import { AuthStorage, ReadOnlyAuthStorage } from "./core/auth-storage.ts";
+import { createAuthStorage, ReadOnlyAuthStorage } from "./core/auth-storage.ts";
 import { exportFromFile } from "./core/export-html/index.ts";
 import type { InlineExtension } from "./core/extensions/types.ts";
 import { applyHttpProxySettings, configureHttpDispatcher } from "./core/http-dispatcher.ts";
@@ -168,6 +169,14 @@ async function runAuthLogoutCommand(args: string[]): Promise<number> {
 	});
 }
 
+async function runAuthAccountsCommand(kind: "accounts" | "use", args: string[]): Promise<number> {
+	const signal = AbortSignal.timeout(15_000);
+	const modelRuntime = await ModelRuntime.create({ allowModelNetwork: false, signal });
+	const terminal = { write: (line: string) => console.log(line), error: (line: string) => console.error(line) };
+	const options = { modelRuntime, terminal, signal };
+	return kind === "accounts" ? await runAuthAccounts(args, options) : await runAuthUse(args, options);
+}
+
 async function runAuthCommand(args: string[]): Promise<boolean> {
 	if (isAuthCommandHelp(args)) {
 		printAuthCommandHelp();
@@ -180,6 +189,13 @@ async function runAuthCommand(args: string[]): Promise<boolean> {
 	}
 	if (args[0] === "auth" && args[1] === "logout") {
 		process.exitCode = await runAuthLogoutCommand(args.slice(2).filter((arg) => arg !== "--offline"));
+		return true;
+	}
+	if (args[0] === "auth" && (args[1] === "accounts" || args[1] === "use")) {
+		process.exitCode = await runAuthAccountsCommand(
+			args[1],
+			args.slice(2).filter((arg) => arg !== "--offline"),
+		);
 		return true;
 	}
 
@@ -224,7 +240,7 @@ async function runAuthCommand(args: string[]): Promise<boolean> {
 		let result: AuthCheckResult;
 		let credential: string | undefined;
 		try {
-			const credentials = command.noRefresh ? new ReadOnlyAuthStorage() : AuthStorage.create();
+			const credentials = command.noRefresh ? new ReadOnlyAuthStorage() : createAuthStorage();
 			const modelRuntime = await createAuthCheckModelRuntime(credentials);
 			result = await checkProviderAuth(parsed, modelRuntime, { refresh: !command.noRefresh });
 			if (command.credentials && result.status === "ready") {

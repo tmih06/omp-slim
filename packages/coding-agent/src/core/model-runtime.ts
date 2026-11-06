@@ -18,6 +18,8 @@ import {
 	type ClassifierResult,
 	type Context,
 	type Credential,
+	type CredentialAccountInfo,
+	type CredentialAccountKey,
 	type CredentialInfo,
 	type CredentialStore,
 	clampThinkingLevel,
@@ -69,7 +71,7 @@ import {
 } from "@earendil-works/pi-ai/utils/model-operations";
 import { getAgentDir } from "../config.ts";
 import { operationSignal, raceWithAbortSignal } from "../utils/abort.ts";
-import { AuthStorage as DefaultAuthStorage } from "./auth-storage.ts";
+import { AuthStorage, createAuthStorage } from "./auth-storage.ts";
 import { ModelConfig } from "./model-config.ts";
 import { FileModelsStore, InMemoryCodingAgentModelsStore } from "./models-store.ts";
 import {
@@ -216,7 +218,9 @@ export class ModelRuntime implements Models {
 	}
 
 	static async create(options: CreateModelRuntimeOptions = {}): Promise<ModelRuntime> {
-		const credentials = new RuntimeCredentials(options.credentials ?? DefaultAuthStorage.create(options.authPath));
+		const credentials = new RuntimeCredentials(
+			options.credentials ?? (options.authPath ? AuthStorage.create(options.authPath) : createAuthStorage()),
+		);
 		const modelsPath =
 			options.modelsPath === null ? undefined : (options.modelsPath ?? join(getAgentDir(), "models.json"));
 		const config = await ModelConfig.load(modelsPath);
@@ -648,6 +652,41 @@ export class ModelRuntime implements Models {
 
 	listCredentials(options?: AuthOperationOptions): Promise<readonly CredentialInfo[]> {
 		return this.credentials.list(options);
+	}
+
+	/**
+	 * Every stored account, when the credential store holds more than one credential per provider.
+	 * Empty for a single-account store.
+	 */
+	async listCredentialAccounts(options?: AuthOperationOptions): Promise<readonly CredentialAccountInfo[]> {
+		const list = this.credentials.listAccounts;
+		return list ? list.call(this.credentials, options) : [];
+	}
+
+	/** Make a stored account the active one for its provider. False when the store cannot or did not. */
+	async selectCredentialAccount(
+		providerId: string,
+		accountKey: CredentialAccountKey,
+		options?: AuthOperationOptions,
+	): Promise<boolean> {
+		const select = this.credentials.selectAccount;
+		if (!select) return false;
+		const selected = await select.call(this.credentials, providerId, accountKey, options);
+		if (selected) await this.refreshProviderAvailability(providerId, operationSignal(options?.signal));
+		return selected;
+	}
+
+	/** Remove one stored account, keeping the provider's other accounts. False when none matched. */
+	async deleteCredentialAccount(
+		providerId: string,
+		accountKey: CredentialAccountKey,
+		options?: AuthOperationOptions,
+	): Promise<boolean> {
+		const remove = this.credentials.deleteAccount;
+		if (!remove) return false;
+		const removed = await remove.call(this.credentials, providerId, accountKey, options);
+		if (removed) await this.refreshProviderAvailability(providerId, operationSignal(options?.signal));
+		return removed;
 	}
 
 	getProviderAuthStatus(providerId: string): AuthStatus {

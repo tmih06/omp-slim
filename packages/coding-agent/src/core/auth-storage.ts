@@ -12,7 +12,9 @@ import { getAgentDir } from "../config.ts";
 import { raceWithAbortSignal } from "../utils/abort.ts";
 import { getFileRevision, normalizePath } from "../utils/paths.ts";
 import { stripBom } from "../utils/text.ts";
+import { migrateAuthJsonToSqliteStore } from "./auth-json-migration.ts";
 import { isCommandConfigValue, resolveConfigValue } from "./resolve-config-value.ts";
+import { SqliteAuthStorage } from "./sqlite-auth-storage.ts";
 
 type AuthStorageData = Record<string, Credential>;
 
@@ -505,4 +507,22 @@ export function readStoredCredential(
 	} catch {
 		return undefined;
 	}
+}
+
+/** Path of the multi-account SQLite credential store inside the agent directory. */
+export function getSqliteAuthPath(agentDir: string = getAgentDir()): string {
+	return join(agentDir, "agent.db");
+}
+
+/**
+ * Credential store the application uses: the multi-account SQLite store, with a one-time import of
+ * the legacy `auth.json` when the database is still empty.
+ *
+ * The JSON store above remains for callers that hand in an explicit path or an in-memory backend, so
+ * tests and embedders keep the exact behavior they pinned.
+ */
+export function createAuthStorage(agentDir: string = getAgentDir()): SqliteAuthStorage {
+	const store = new SqliteAuthStorage(getSqliteAuthPath(agentDir));
+	migrateAuthJsonToSqliteStore(store, { agentDir });
+	return store;
 }

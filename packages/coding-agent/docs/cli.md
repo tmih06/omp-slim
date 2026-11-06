@@ -13,7 +13,9 @@ pi update [target] [options]
 pi list
 pi config [options]
 pi auth login <provider> [--api-key] [--no-browser]
-pi auth logout <provider>
+pi auth logout <provider> [--account <key>]
+pi auth accounts [--provider <provider>] [--json]
+pi auth use <provider> <account>
 pi auth <check|print-api-key|print-bearer-token> [options]
 pi mcp <add|remove|list|login|logout> [options]
 ```
@@ -310,13 +312,19 @@ export PI_SELF_UPDATE_COMMAND="mise use -g npm:{packageName}@{version}"
 | `--api-key` | Save an API key instead of signing in with an account; the key is read without echoing it |
 | `--no-browser` | Do not open a browser; use the provider's other sign-in method, such as a device code, for example over SSH. Asks when there are several. Not allowed with `--api-key` |
 
-`pi auth logout <provider>` removes the credentials that `pi auth login` or `/login` stored, like `/logout`. Environment variables and `models.json` config are unchanged. It exits with status `0` when nothing is stored, so it is safe to repeat.
+`pi auth logout <provider>` removes the credentials that `pi auth login` or `/login` stored, like `/logout`. Environment variables and `models.json` config are unchanged. It exits with status `0` when nothing is stored, so it is safe to repeat. With `--account <key>`, it removes only that account and keeps the provider's other accounts.
+
+A provider holds several accounts at once. Signing in again with a different account adds it beside the existing one instead of replacing it, so two subscriptions or two organizations of one account can be stored side by side.
 
 ```sh
 pi auth login radius
+pi auth accounts
+pi auth use anthropic user@example.com
 pi auth logout radius
 pi auth check --provider openai --json
 ```
+
+`pi auth accounts` lists stored accounts, marking the active one per provider with `*`; `--provider` narrows the list and `--json` prints it as JSON. `pi auth use <provider> <account>` makes a stored account the one requests use; the account key is the value `auth accounts` prints.
 
 The other authentication commands require `--provider <provider>` or `--model <model>`. See [Providers](providers.md) for supported methods.
 

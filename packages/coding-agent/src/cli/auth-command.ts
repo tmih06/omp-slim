@@ -39,17 +39,21 @@ export function isAuthCommandHelp(args: string[]): boolean {
 export function printAuthCommandHelp(): void {
 	console.log(`Usage:
   pi auth login <provider> [--api-key] [--no-browser]
-  pi auth logout <provider>
+  pi auth logout <provider> [--account <key>]
+  pi auth accounts [--provider <provider>] [--json]
+  pi auth use <provider> <account>
   pi auth print-api-key [--provider <provider>] [--model <model>]
   pi auth print-bearer-token [--provider <provider>] [--model <model>] [--min-expiry <duration>]
   pi auth check [--provider <provider>] [--model <model>] [--json] [--credentials] [--no-refresh]
 
 Log in to and out of model providers, print their credentials for external clients, or check that they are ready.
-Credentials are stored in ~/.pi/agent/auth.json.
+Credentials are stored in ~/.pi/agent/agent.db (SQLite). Each provider can hold several accounts.
 
 Commands:
   login <provider>        Sign in with an account in the browser, or save an API key, then exit
   logout <provider>       Remove the stored credentials; environment variables and models.json stay
+  accounts                List stored accounts, marking the active one per provider
+  use <provider> <acct>   Make a stored account the active one for that provider
   print-api-key           Print the resolved API key
   print-bearer-token      Print a resolved OAuth bearer token (refreshes if expired)
   check                   Print ready, not_ready, or invalid; exit with 0, 1, or 2
@@ -61,6 +65,10 @@ Options for print-api-key, print-bearer-token, and check (at least one is requir
 Options for login:
   --api-key               Save an API key instead of signing in with an account
   --no-browser            Do not open a browser; use another sign-in method, e.g. device code
+
+Options for logout and accounts:
+  --account <key>         Remove only that account instead of every credential of the provider
+  --json                  Print accounts as JSON
 
 Other options:
   --min-expiry <duration> Minimum remaining token lifetime for print-bearer-token, e.g. 30m or 1h

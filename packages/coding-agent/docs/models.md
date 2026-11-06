@@ -16,7 +16,9 @@ Browse the [model catalog](https://pi.dev/models) for current providers, model I
 
 ## Authenticate
 
-Run `/login` and select a provider. Pi stores credentials in [`auth.json`](configuration.md#agent-directory). Run `/logout` to remove stored credentials for a provider.
+Run `/login` and select a provider. Pi stores credentials in [`agent.db`](configuration.md#agent-directory). Run `/logout` to remove stored credentials for a provider.
+
+A provider can hold several accounts, for example the same OAuth account in two organizations or two subscriptions. `omp-slim auth accounts` lists them, marking the active one per provider, and `omp-slim auth use <provider> <account>` switches which one requests use. Logging in again with a different account adds it beside the existing one instead of replacing it.
 
 You can instead provide an API key through the provider's environment variable. This is useful in CI and other environments where Pi should not write credentials. [Providers](providers.md) lists the variables and provider-specific setup.
 

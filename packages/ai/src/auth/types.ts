@@ -36,6 +36,28 @@ export interface OAuthCredential extends OAuthCredentials {
 /** One type-tagged credential per provider — the shape of today's auth.json. */
 export type Credential = ApiKeyCredential | OAuthCredential;
 
+/**
+ * Non-secret identifier of one account behind a provider. A provider can hold several at once, for
+ * example the same account in two organizations. `key` is stable for the credential it came from:
+ * for OAuth it is derived from account/email/project (plus org when the provider is org-scoped), and
+ * for API keys it distinguishes keys of the same provider. `null` when the credential carries no
+ * identity, in which case only one such credential per provider is kept.
+ */
+export type CredentialAccountKey = string | null;
+
+/** Non-secret metadata for one stored account. */
+export interface CredentialAccountInfo {
+	providerId: string;
+	type: Credential["type"];
+	accountKey: CredentialAccountKey;
+	/** Human-readable account label (email, account id, or key hint) when the credential exposes one. */
+	label?: string;
+	/** True for the account `read(providerId)` resolves to. */
+	active: boolean;
+	/** Epoch milliseconds when the credential was stored. */
+	createdAt?: number;
+}
+
 /** Non-secret credential metadata for account/status enumeration. */
 export interface CredentialInfo {
 	providerId: string;
@@ -56,6 +78,12 @@ export interface AuthOperationOptions {
  * `modify(provider.id, async () => credential)`. Login/logout orchestration
  * is app-owned.
  *
+ * A store MAY hold several accounts for one provider, for example the same
+ * OAuth account in two organizations. Only the account methods below expose
+ * that; `read` keeps returning the active credential so every existing caller
+ * is unaffected. Stores without multi-account support omit them, and callers
+ * must treat their absence as "one account per provider".
+ *
  * Error semantics: `read` resolves `undefined` for missing entries. Methods
  * reject only on storage failure; `Models` wraps such rejections in
  * `ModelsError` with code "auth". Best-effort stores that serve an in-memory
@@ -66,14 +94,60 @@ export interface CredentialStore {
 	/**
 	 * Read the stored credential, possibly expired. Display/status use;
 	 * resolved request auth comes from `Models.getAuth()`.
+	 *
+	 * For a multi-account store this is the active account. Pass `accountKey` to
+	 * read a specific one.
 	 */
-	read(providerId: string, options?: AuthOperationOptions): Promise<Credential | undefined>;
+	read(
+		providerId: string,
+		options?: AuthOperationOptions & { accountKey?: CredentialAccountKey },
+	): Promise<Credential | undefined>;
 
 	/**
 	 * List stored credential metadata without resolving or exposing secrets.
 	 * Implementations must not execute configured API-key commands while listing.
 	 */
 	list(options?: AuthOperationOptions): Promise<readonly CredentialInfo[]>;
+
+	/**
+	 * List every stored account, one entry per (provider, accountKey). Optional:
+	 * a store without it holds exactly one account per provider, which
+	 * {@link CredentialStore.list} already reports.
+	 */
+	listAccounts?(options?: AuthOperationOptions): Promise<readonly CredentialAccountInfo[]>;
+
+	/**
+	 * Store `credential` as the account identified by `accountKey`, replacing a
+	 * stored credential with the same key, and make it the provider's active
+	 * account. Returns the resulting accounts for that provider. Optional; see
+	 * {@link CredentialStore.listAccounts}.
+	 */
+	saveAccount?(
+		providerId: string,
+		accountKey: CredentialAccountKey,
+		credential: Credential,
+		options?: AuthOperationOptions,
+	): Promise<readonly CredentialAccountInfo[]>;
+
+	/**
+	 * Make a stored account the one `read(providerId)` resolves to. Resolves
+	 * false when the provider has no account with `accountKey`.
+	 */
+	selectAccount?(
+		providerId: string,
+		accountKey: CredentialAccountKey,
+		options?: AuthOperationOptions,
+	): Promise<boolean>;
+
+	/**
+	 * Remove one stored account. When it was active, another remaining account
+	 * becomes active. Resolves false when no such account exists.
+	 */
+	deleteAccount?(
+		providerId: string,
+		accountKey: CredentialAccountKey,
+		options?: AuthOperationOptions,
+	): Promise<boolean>;
 
 	/**
 	 * Serialized write — the only write path. `fn` sees the current credential
