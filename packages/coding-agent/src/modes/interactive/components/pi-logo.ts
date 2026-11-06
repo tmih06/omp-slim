@@ -5,6 +5,7 @@ const WHITE = rgbColor(236, 236, 236);
 const CORAL = rgbColor(228, 138, 122);
 const BLUE = rgbColor(79, 142, 179);
 const YELLOW = rgbColor(234, 182, 93);
+const LIGHT_PURPLE = rgbColor(198, 160, 246);
 const RESET = "\x1b[0m";
 
 /**
@@ -19,17 +20,20 @@ const GLYPHS: Record<string, readonly string[]> = {
 
 /** Render `OM` in white at `topRow` (0 or 2), each column collapsing two pixel rows into one block. */
 function renderOmLine(topRow: number, mode: ReturnType<typeof theme.getColorMode>): string {
-	let line = foregroundAnsi(WHITE, mode);
+	const glyphs: string[] = [];
 	for (const character of ["O", "M"]) {
 		const glyph = GLYPHS[character]!;
+		let drawn = "";
 		for (let column = 0; column < glyph[0]!.length; column++) {
 			const top = glyph[topRow]![column] === "█";
 			const bottom = glyph[topRow + 1]![column] === "█";
-			line += top && bottom ? "█" : top ? "▀" : bottom ? "▄" : " ";
+			drawn += top && bottom ? "█" : top ? "▀" : bottom ? "▄" : " ";
 		}
-		line += " ";
+		glyphs.push(drawn);
 	}
-	return line + RESET;
+	// Characters are separated by exactly one space; no trailing space, so the caller owns the gap
+	// between the prefix and Pi's mark.
+	return `${foregroundAnsi(WHITE, mode)}${glyphs.join(" ")}${RESET}`;
 }
 
 /**
@@ -57,4 +61,12 @@ export function supportsPiLogo(): boolean {
 export function piWordmark(): string {
 	const mode = theme.getColorMode();
 	return `${foregroundAnsi(WHITE, mode)}OM${RESET}${foregroundAnsi(CORAL, mode)}P${RESET}${foregroundAnsi(YELLOW, mode)}i${RESET}`;
+}
+
+/**
+ * The product qualifier shown after the mark. Light purple at full intensity: it is brand text like
+ * the logo, so it deliberately avoids the theme's dim tokens.
+ */
+export function productTag(): string {
+	return `${foregroundAnsi(LIGHT_PURPLE, theme.getColorMode())}slim${RESET}`;
 }

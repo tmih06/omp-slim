@@ -165,7 +165,7 @@ import {
 	formatAuthSelectorProviderType,
 	OAuthSelectorComponent,
 } from "./components/oauth-selector.ts";
-import { piLogoLines, piWordmark, supportsPiLogo } from "./components/pi-logo.ts";
+import { piLogoLines, piWordmark, productTag, supportsPiLogo } from "./components/pi-logo.ts";
 import { createLoginMenuSelector } from "./components/radius-login-selector.ts";
 import { ScopedModelsSelectorComponent } from "./components/scoped-models-selector.ts";
 import { SessionSelectorComponent } from "./components/session-selector.ts";
@@ -1042,9 +1042,8 @@ export class InteractiveMode {
 			// its second line the first line of key hints. Terminals that cannot render the logo get a
 			// "Pi vX" line instead, with the key hints below it.
 			const showLogo = supportsPiLogo();
-			// The fork's name follows the mark as ordinary dim text: same size and weight as the
-			// version, so the block art stays the only display type in the header.
-			const slimTag = theme.fg("dim", "slim");
+			// The fork's name follows the mark in its own light purple, at normal weight and size.
+			const slimTag = productTag();
 			const withLogo = (hints: string) => {
 				if (!showLogo) return `${piWordmark()} ${slimTag} ${theme.fg("dim", `v${this.version}`)}\n${hints}`;
 				const [top, bottom] = piLogoLines();
