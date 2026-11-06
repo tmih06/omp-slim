@@ -1,4 +1,5 @@
 import { mkdtempSync, rmSync, statSync } from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -148,7 +149,10 @@ describe("SqliteAuthStorage", () => {
 
 		const reopened = new SqliteAuthStorage(path);
 		stores.push(reopened);
-		expect((await reopened.listAccounts()).map((account) => account.accountKey)).toEqual(["acct-b", "acct-a"]);
+		// Rows come back in OMP's id order; the selection is what must survive.
+		expect((await reopened.listAccounts()).filter((account) => account.active)).toMatchObject([
+			{ accountKey: "acct-b" },
+		]);
 		expect(await reopened.read("anthropic")).toMatchObject({ access: "access-acct-b" });
 	});
 
@@ -193,5 +197,121 @@ describe("SqliteAuthStorage", () => {
 
 		expect(await store.listAccounts()).toEqual([]);
 		expect(await store.read("anthropic")).toBeUndefined();
+	});
+});
+
+describe("OMP database compatibility", () => {
+	/**
+	 * OMP owns ~/.pi/agent/agent.db. Its auth_credentials has no `active` column, and this store must
+	 * open that file rather than requiring its own schema — creating the table is a no-op there, so
+	 * any column this store assumes would fail at index creation.
+	 */
+	function createOmpDatabase(dir: string): string {
+		const path = join(dir, "agent.db");
+		const db = new DatabaseSync(path);
+		db.exec(`
+			CREATE TABLE auth_credentials (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				provider TEXT NOT NULL,
+				credential_type TEXT NOT NULL,
+				data TEXT NOT NULL,
+				disabled_cause TEXT DEFAULT NULL,
+				identity_key TEXT DEFAULT NULL,
+				created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER)),
+				updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER))
+			);
+			CREATE INDEX idx_auth_provider ON auth_credentials(provider);
+			CREATE UNIQUE INDEX idx_auth_provider_identity ON auth_credentials(provider, identity_key) WHERE identity_key IS NOT NULL;
+			CREATE TABLE cache (key TEXT PRIMARY KEY, value TEXT NOT NULL, expires_at INTEGER NOT NULL);
+			CREATE TABLE auth_credential_blocks (
+				credential_id INTEGER NOT NULL, provider_key TEXT NOT NULL, block_scope TEXT NOT NULL DEFAULT '',
+				blocked_until_ms INTEGER NOT NULL, updated_at INTEGER NOT NULL,
+				PRIMARY KEY (credential_id, provider_key, block_scope)
+			);
+		`);
+		// Two accounts of one provider, as OMP stores them.
+		for (const [account, id] of [
+			["tmih.real@gmail.com", 14],
+			["second@gmail.com", 18],
+		] as const) {
+			db.prepare(
+				"INSERT INTO auth_credentials (id, provider, credential_type, data, identity_key) VALUES (?, 'google', 'oauth', ?, ?)",
+			).run(
+				id,
+				JSON.stringify({ refresh: "r", access: `a-${id}`, expires: Date.now() + 3_600_000, accountId: id }),
+				`email:${account}`,
+			);
+		}
+		db.close();
+		return path;
+	}
+
+	it("opens a database whose auth_credentials lacks the active column", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "omp-compat-"));
+		dirs.push(dir);
+		const path = createOmpDatabase(dir);
+
+		// The crash this guards against: an index over a column OMP does not have.
+		const store = new SqliteAuthStorage(path);
+		stores.push(store);
+
+		const accounts = await store.listAccounts();
+		expect(accounts.map((account) => account.accountKey)).toEqual([
+			"email:tmih.real@gmail.com",
+			"email:second@gmail.com",
+		]);
+		// OMP's default is the lowest id among enabled rows.
+		expect(accounts.filter((account) => account.active)).toMatchObject([{ accountKey: "email:tmih.real@gmail.com" }]);
+	});
+
+	it("leaves OMP's credential ids and block references untouched when selecting", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "omp-compat-"));
+		dirs.push(dir);
+		const path = createOmpDatabase(dir);
+		const store = new SqliteAuthStorage(path);
+		stores.push(store);
+
+		const inspector = new DatabaseSync(path);
+		inspector
+			.prepare(
+				"INSERT INTO auth_credential_blocks (credential_id, provider_key, blocked_until_ms, updated_at) VALUES (14, 'google', 0, 0)",
+			)
+			.run();
+		inspector.close();
+
+		expect(await store.selectAccount("google", "email:second@gmail.com")).toBe(true);
+
+		// Renumbering rows would have broken this foreign key by convention.
+		const check = new DatabaseSync(path);
+		const ids = (check.prepare("SELECT id FROM auth_credentials ORDER BY id").all() as Array<{ id: number }>).map(
+			(row) => row.id,
+		);
+		const block = check.prepare("SELECT credential_id FROM auth_credential_blocks").get() as {
+			credential_id: number;
+		};
+		check.close();
+		expect(ids).toEqual([14, 18]);
+		expect(block.credential_id).toBe(14);
+
+		const accounts = await store.listAccounts();
+		expect(accounts.filter((account) => account.active)).toMatchObject([{ accountKey: "email:second@gmail.com" }]);
+	});
+
+	it("tombstones instead of deleting, so OMP sees the account as gone", async () => {
+		const dir = mkdtempSync(join(tmpdir(), "omp-compat-"));
+		dirs.push(dir);
+		const path = createOmpDatabase(dir);
+		const store = new SqliteAuthStorage(path);
+		stores.push(store);
+
+		expect(await store.deleteAccount("google", "email:second@gmail.com")).toBe(true);
+
+		const check = new DatabaseSync(path);
+		const row = check
+			.prepare("SELECT disabled_cause FROM auth_credentials WHERE identity_key = ?")
+			.get("email:second@gmail.com") as { disabled_cause: string | null };
+		check.close();
+		expect(row.disabled_cause).not.toBeNull();
+		expect(await store.listAccounts()).toHaveLength(1);
 	});
 });
