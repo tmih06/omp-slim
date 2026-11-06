@@ -218,6 +218,7 @@ const lazyEntryPoints = {
 	radius: join(aiDistDir, "auth", "oauth", "radius.js"),
 	xai: join(aiDistDir, "auth", "oauth", "xai.js"),
 	zai: join(aiDistDir, "auth", "oauth", "zai.js"),
+	"google-cloud-code": join(aiDistDir, "auth", "oauth", "google-cloud-code.js"),
 };
 
 // Every OAuth flow loaded through importOAuthModule() must have a lazy entry,

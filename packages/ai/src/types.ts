@@ -70,6 +70,7 @@ export type KnownApi =
 	| "anthropic-messages"
 	| "bedrock-converse-stream"
 	| "google-generative-ai"
+	| "google-gemini-cli"
 	| "google-vertex"
 	| "pi-messages";
 
@@ -92,6 +93,8 @@ export type KnownProvider =
 	| "ant-ling"
 	| "anthropic"
 	| "google"
+	| "google-antigravity"
+	| "google-gemini-cli"
 	| "google-vertex"
 	| "openai"
 	| "azure"
@@ -318,6 +321,7 @@ export interface ApiOptionsMap {
 	"openai-codex-responses": OpenAICodexResponsesOptions;
 	"azure-openai-responses": AzureOpenAIResponsesOptions;
 	"google-generative-ai": GoogleOptions;
+	"google-gemini-cli": StreamOptions;
 	"google-vertex": GoogleVertexOptions;
 	"mistral-conversations": MistralOptions;
 	"bedrock-converse-stream": BedrockOptions;

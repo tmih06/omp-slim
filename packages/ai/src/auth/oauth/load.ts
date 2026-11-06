@@ -25,6 +25,8 @@ type OAuthFlowLoaders = {
 	xai: () => OAuthAuth | Promise<OAuthAuth>;
 	radius: (options: { name: string; gateway: string }) => OAuthAuth | Promise<OAuthAuth>;
 	zai: () => OAuthAuth | Promise<OAuthAuth>;
+	googleGeminiCli: () => OAuthAuth | Promise<OAuthAuth>;
+	googleAntigravity: () => OAuthAuth | Promise<OAuthAuth>;
 };
 
 let bundledLoaders: OAuthFlowLoaders | undefined;
@@ -33,6 +35,18 @@ let bundledLoaders: OAuthFlowLoaders | undefined;
 export function registerBundledOAuthFlowLoaders(loaders: OAuthFlowLoaders): void {
 	bundledLoaders = loaders;
 }
+
+export const loadGoogleGeminiCliOAuth = async (): Promise<OAuthAuth> => {
+	if (bundledLoaders) return bundledLoaders.googleGeminiCli();
+	return ((await importOAuthModule("./google-cloud-code.ts")) as { googleGeminiCliOAuth: OAuthAuth })
+		.googleGeminiCliOAuth;
+};
+
+export const loadGoogleAntigravityOAuth = async (): Promise<OAuthAuth> => {
+	if (bundledLoaders) return bundledLoaders.googleAntigravity();
+	return ((await importOAuthModule("./google-cloud-code.ts")) as { googleAntigravityOAuth: OAuthAuth })
+		.googleAntigravityOAuth;
+};
 
 export const loadZaiOAuth = async (): Promise<OAuthAuth> => {
 	if (bundledLoaders) return bundledLoaders.zai();

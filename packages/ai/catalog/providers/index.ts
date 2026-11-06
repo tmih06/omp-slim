@@ -12,6 +12,8 @@ import cloudflareWorkersAi from "./cloudflare-workers-ai.ts";
 import deepseek from "./deepseek.ts";
 import fireworks from "./fireworks.ts";
 import githubCopilot from "./github-copilot.ts";
+import googleAntigravity from "./google-antigravity.ts";
+import googleGeminiCli from "./google-gemini-cli.ts";
 import google from "./google.ts";
 import googleVertex from "./google-vertex.ts";
 import groq from "./groq.ts";
@@ -90,6 +92,8 @@ export const PROVIDERS: readonly ProviderDefinition[] = [
 	fireworks,
 	githubCopilot,
 	googleVertex,
+	googleAntigravity,
+	googleGeminiCli,
 	google,
 	groq,
 	huggingface,
