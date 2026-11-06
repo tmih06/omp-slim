@@ -699,12 +699,20 @@ async function getSelfUpdatePlan(force: boolean): Promise<SelfUpdatePlan> {
 		});
 	}
 	if (!latestRelease) {
-		throw new Error(`Could not determine latest ${APP_NAME} version.`);
+		// A repository without a published release is not an error: there is nothing newer yet.
+		console.log(chalk.green(`${APP_NAME} is already up to date (v${VERSION})`));
+		return {
+			packageName: PACKAGE_NAME,
+			installSpec: `${PACKAGE_NAME}@${VERSION}`,
+			version: VERSION,
+			shouldRun: false,
+		};
 	}
 
-	const packageName = latestRelease.packageName ?? PACKAGE_NAME;
+	// A GitHub release carries a version, not a package name, so installs stay on the fork's package.
+	const packageName = PACKAGE_NAME;
 	const installSpec = `${packageName}@${latestRelease.version}`;
-	if (force || packageName !== PACKAGE_NAME || isNewerPackageVersion(latestRelease.version, VERSION)) {
+	if (force || isNewerPackageVersion(latestRelease.version, VERSION)) {
 		return {
 			packageName,
 			installSpec,
