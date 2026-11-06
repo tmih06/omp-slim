@@ -1042,10 +1042,13 @@ export class InteractiveMode {
 			// its second line the first line of key hints. Terminals that cannot render the logo get a
 			// "Pi vX" line instead, with the key hints below it.
 			const showLogo = supportsPiLogo();
+			// The fork's name follows the mark as ordinary dim text: same size and weight as the
+			// version, so the block art stays the only display type in the header.
+			const slimTag = theme.fg("dim", "slim");
 			const withLogo = (hints: string) => {
-				if (!showLogo) return `${piWordmark()} ${theme.fg("dim", `v${this.version}`)}\n${hints}`;
+				if (!showLogo) return `${piWordmark()} ${slimTag} ${theme.fg("dim", `v${this.version}`)}\n${hints}`;
 				const [top, bottom] = piLogoLines();
-				return `${top} ${theme.fg("dim", `v${this.version}`)}\n${bottom} ${hints}`;
+				return `${top} ${slimTag} ${theme.fg("dim", `v${this.version}`)}\n${bottom} ${hints}`;
 			};
 
 			// Build startup instructions using keybinding hint helpers
