@@ -69,7 +69,7 @@ import {
 	classifierErrorResult,
 	imageErrorResult,
 } from "@earendil-works/pi-ai/utils/model-operations";
-import { getAgentDir } from "../config.ts";
+import { getModelsPath } from "../config.ts";
 import { operationSignal, raceWithAbortSignal } from "../utils/abort.ts";
 import { AuthStorage, createAuthStorage } from "./auth-storage.ts";
 import { ModelConfig } from "./model-config.ts";
@@ -229,8 +229,7 @@ export class ModelRuntime implements Models {
 			options.credentials ??
 				(options.authPath ? AuthStorage.create(options.authPath) : createAuthStorage(options.agentDir)),
 		);
-		const modelsPath =
-			options.modelsPath === null ? undefined : (options.modelsPath ?? join(getAgentDir(), "models.json"));
+		const modelsPath = options.modelsPath === null ? undefined : (options.modelsPath ?? getModelsPath());
 		const config = await ModelConfig.load(modelsPath);
 		const modelsStore =
 			options.modelsStore ??

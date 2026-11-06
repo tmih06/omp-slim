@@ -21,6 +21,7 @@ import {
 	detectInstallMethod,
 	getAgentDir,
 	getConfiguredSelfUpdateArgv,
+	getModelsPath,
 	getPackageDir,
 	getSelfUpdateCommand,
 	getSelfUpdateUnavailableInstruction,
@@ -613,7 +614,7 @@ async function refreshModelCatalogs(agentDir: string): Promise<void> {
 	try {
 		const modelRuntime = await ModelRuntime.create({
 			agentDir,
-			modelsPath: join(agentDir, "models.json"),
+			modelsPath: getModelsPath(agentDir),
 			allowModelNetwork: false,
 			signal: controller.signal,
 		});

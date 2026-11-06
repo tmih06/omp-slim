@@ -641,9 +641,16 @@ export function getCustomThemesDir(): string {
 	return join(getAgentDir(), "themes");
 }
 
-/** Get path to models.json */
-export function getModelsPath(): string {
-	return join(getAgentDir(), "models.json");
+/**
+ * Get the models config path. OMP's `models.yml` wins when present, so an omp install keeps its
+ * custom providers; `models.json` remains the default for a fresh agent directory.
+ */
+export function getModelsPath(agentDir: string = getAgentDir()): string {
+	const yamlPath = join(agentDir, "models.yml");
+	if (existsSync(yamlPath)) return yamlPath;
+	const yamlLongPath = join(agentDir, "models.yaml");
+	if (existsSync(yamlLongPath)) return yamlLongPath;
+	return join(agentDir, "models.json");
 }
 
 /** Get path to auth.json */

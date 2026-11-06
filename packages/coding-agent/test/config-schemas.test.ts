@@ -270,6 +270,60 @@ describe("generated configuration schemas", () => {
 		expect((await ModelConfig.load(path)).getError()).toContain("$schema");
 	});
 
+	it("loads OMP's models.yml with providers and models", async () => {
+		const directory = createTemporaryDirectory();
+		const path = join(directory, "models.yml");
+		writeFileSync(
+			path,
+			`providers:
+  deploy:
+    baseUrl: https://api.example.com/api/v1
+    api: openai-completions
+    apiKey: secret-token
+    models:
+      - id: vendor/deepseek-v4.1-flash
+        name: Deepseek 4.1 Flash
+        reasoning: true
+        input: [text, image]
+        contextWindow: 1000000
+        maxTokens: 32768
+        compat:
+          supportsDeveloperRole: false
+`,
+		);
+
+		const config = await ModelConfig.load(path);
+		expect(config.getError()).toBeUndefined();
+		const provider = config.getProvider("deploy");
+		expect(provider?.baseUrl).toBe("https://api.example.com/api/v1");
+		expect(provider?.api).toBe("openai-completions");
+		expect(provider?.models?.[0]).toMatchObject({
+			id: "vendor/deepseek-v4.1-flash",
+			reasoning: true,
+			contextWindow: 1000000,
+			maxTokens: 32768,
+			input: ["text", "image"],
+			compat: { supportsDeveloperRole: false },
+		});
+	});
+
+	it("reports YAML syntax errors against the file path", async () => {
+		const directory = createTemporaryDirectory();
+		const path = join(directory, "models.yml");
+		writeFileSync(path, "providers: [unclosed\n  bad: : :\n");
+
+		const config = await ModelConfig.load(path);
+		expect(config.getError()).toContain(path);
+	});
+
+	it("validates models.yml against the same schema as models.json", async () => {
+		const directory = createTemporaryDirectory();
+		const path = join(directory, "models.yml");
+		writeFileSync(path, `providers:\n  demo:\n    models:\n      - id: ""\n`);
+
+		expect((await ModelConfig.load(path)).getError()).toContain("Invalid models.json schema");
+	});
+
 	it("accepts $schema in settings.json and preserves unknown settings", () => {
 		const directory = createTemporaryDirectory();
 		writeFileSync(

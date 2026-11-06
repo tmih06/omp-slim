@@ -51,7 +51,7 @@ Credentials are stored in ~/.pi/agent/agent.db (SQLite). Each provider can hold 
 
 Commands:
   login <provider>        Sign in with an account in the browser, or save an API key, then exit
-  logout <provider>       Remove the stored credentials; environment variables and models.json stay
+  logout <provider>       Remove the stored credentials; environment variables and models.yml stay
   accounts                List stored accounts, marking the active one per provider
   use <provider> <acct>   Make a stored account the active one for that provider
   print-api-key           Print the resolved API key
