@@ -19,6 +19,8 @@ export function registerLazyOAuthFlows(): void {
 		meta: async () => (await import("./auth/oauth/meta.ts")).metaOAuth,
 		xai: async () => (await import("./auth/oauth/xai.ts")).xaiOAuth,
 		zai: async () => (await import("./auth/oauth/zai.ts")).zaiOAuth,
+		googleGeminiCli: async () => (await import("./auth/oauth/google-cloud-code.ts")).googleGeminiCliOAuth,
+		googleAntigravity: async () => (await import("./auth/oauth/google-cloud-code.ts")).googleAntigravityOAuth,
 		radius: async (options) => (await import("./auth/oauth/radius.ts")).createRadiusOAuth(options),
 	});
 }

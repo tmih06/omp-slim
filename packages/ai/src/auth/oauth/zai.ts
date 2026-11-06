@@ -116,7 +116,15 @@ async function loginZai(interaction: ProviderAuthInteraction): Promise<OAuthCred
 	// body evaluates. That is fine in the Bun runtime this CLI ships on, but it throws under
 	// Node, where the test runner executes. Deferring keeps this module loadable everywhere
 	// and only pays the import when a user actually signs in.
-	const { zaiMintKeyHook } = await import("@oh-my-pi/pi-ai/registry/oauth/zai");
+	// Variable specifier so bundlers do not follow OMP's Node-only graph into the browser smoke bundle.
+	const specifier = "@oh-my-pi/pi-ai/registry/oauth/zai";
+	const { zaiMintKeyHook } = (await import(specifier)) as {
+		// OMP's credential type has no `type` tag; ours adds it, so strip it at this boundary.
+		zaiMintKeyHook: (
+			credential: Omit<OAuthCredential, "type">,
+			context: unknown,
+		) => Promise<Omit<OAuthCredential, "type">>;
+	};
 	const controller = createOmpLoginController(interaction);
 	const minted = await zaiMintKeyHook(
 		{ refresh: accessToken, access: accessToken, expires: Number.MAX_SAFE_INTEGER },
